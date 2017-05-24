@@ -1,0 +1,7 @@
+.depend
+.depend.*
+*.o
+*.debug
+*.full
+client/client
+server/server
