@@ -10,11 +10,11 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-void	 receive_file(char *filename, struct file_info *remote_info);
-void	 adjust_file(char *filename, struct file_info *remote_info);
-void	 adjust_file_size(int fd, off_t size);
-void	 adjust_file_content(int fd);
-void	 adjust_file_mtime(int fd, struct timespec mtime);
+void	 receive_file(const char *filename, const struct file_info *remote_info);
+void	 adjust_file(const char *filename, const struct file_info *remote_info);
+void	 adjust_file_size(const int fd, const off_t size);
+void	 adjust_file_content(const int fd);
+void	 adjust_file_mtime(const int fd, const struct timespec mtime);
 
 int
 main(int argc, char *argv[])
@@ -44,7 +44,7 @@ main(int argc, char *argv[])
 }
 
 void
-receive_file(char *filename, struct file_info *remote_info)
+receive_file(const char *filename, const struct file_info *remote_info)
 {
     struct file_info *local_info;
 
@@ -67,7 +67,7 @@ receive_file(char *filename, struct file_info *remote_info)
 }
 
 void
-adjust_file(char *filename, struct file_info *remote_info)
+adjust_file(const char *filename, const struct file_info *remote_info)
 {
     int fd;
     if ((fd = open(filename, O_RDWR | O_CREAT, 0666)) < 0)
@@ -81,21 +81,21 @@ adjust_file(char *filename, struct file_info *remote_info)
 }
 
 void
-adjust_file_size(int fd, off_t size)
+adjust_file_size(const int fd, const off_t size)
 {
     if (ftruncate(fd, size) < 0)
 	err(EXIT_FAILURE, "ftruncate");
 }
 
 void
-adjust_file_content(int fd)
+adjust_file_content(const int fd)
 {
     (void) fd;
     /* FIXME */
 }
 
 void
-adjust_file_mtime(int fd, struct timespec mtime)
+adjust_file_mtime(const int fd, const struct timespec mtime)
 {
     struct timespec times[] = {
 	{ 0, UTIME_OMIT },

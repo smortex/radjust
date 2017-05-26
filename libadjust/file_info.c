@@ -15,7 +15,7 @@ file_info_alloc(void)
 }
 
 struct file_info *
-file_info_new(char *filename)
+file_info_new(const char *filename)
 {
     struct stat sb;
     if (stat(filename, &sb) < 0) {
@@ -33,7 +33,7 @@ file_info_new(char *filename)
 }
 
 int
-file_info_cmp(struct file_info *left, struct file_info *right)
+file_info_cmp(const struct file_info *left, const struct file_info *right)
 {
     if (left->size != right->size)
 	return left->size - right->size;

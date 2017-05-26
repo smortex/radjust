@@ -4,9 +4,9 @@
 struct file_info;
 
 struct file_info	*file_info_alloc(void);
-struct file_info	*file_info_new(char *filename);
+struct file_info	*file_info_new(const char *filename);
 
-int			 file_info_cmp(struct file_info *left, struct file_info *right);
+int			 file_info_cmp(const struct file_info *left, const struct file_info *right);
 
 void			 file_info_free(struct file_info *info);
 

@@ -6,7 +6,7 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-int		 send_file(char *filename);
+int		 send_file(const char *filename);
 
 int
 main(int argc, char *argv[])
@@ -22,7 +22,7 @@ main(int argc, char *argv[])
 }
 
 int
-send_file(char *filename)
+send_file(const char *filename)
 {
     struct file_info *info;
     if (!(info = file_info_new(filename)))
