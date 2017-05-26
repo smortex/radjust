@@ -1,6 +1,6 @@
 require 'securerandom'
 
-Given(/^a file "([^"]*)" exists and is (\d+) bytes$/) do |name, size|
+Given(/^a file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
   filename = tmp_file_name(name)
 
   File.open(filename, 'wb') do |f|
@@ -20,7 +20,7 @@ Then(/^the file "([^"]*)" should exist$/) do |name|
   expect(File.exist?(filename)).to be_truthy
 end
 
-Then(/^the file "([^"]*)" sould be (\d+) bytes long$/) do |name, size|
+Then(/^the file "([^"]*)" sould be (#{FILESIZE}) long$/) do |name, size|
   filename = tmp_file_name(name)
 
   expect(File.stat(filename).size).to eq(size.to_i)
