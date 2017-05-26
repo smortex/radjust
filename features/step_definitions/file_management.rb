@@ -14,6 +14,10 @@ Given(/^a file "([^"]*)" does not exist$/) do |name|
   File.unlink(filename) if File.exist?(filename)
 end
 
+Given(/^I wait (\d*.\d*) s$/) do |duration|
+  sleep duration.to_f
+end
+
 Then(/^the file "([^"]*)" should exist$/) do |name|
   filename = tmp_file_name(name)
 

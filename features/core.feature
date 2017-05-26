@@ -10,6 +10,7 @@ Feature: File adjustement
 
   Scenario: Adjust file size
     Given a random file "source" exists and is 42 B
+    And I wait 0.001 s
     And a random file "target" exists and is 42 B
     When I synchronize "source" -> "target"
     Then the file "target" should exist
