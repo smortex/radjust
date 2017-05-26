@@ -1,6 +1,10 @@
 #ifndef _ADJUST_H
 #define _ADJUST_H
 
+#define ADJUST_FILE_UPTODATE 0
+#define ADJUST_FILE_MISMATCH 1
+#define ADJUST_FILE_MISSING  2
+
 struct file_info;
 
 struct file_info	*file_info_alloc(void);

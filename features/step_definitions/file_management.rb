@@ -32,3 +32,10 @@ Then(/^"([^"]*)" and "([^"]*)" should have the same mtime$/) do |source, destina
 
   expect(File.mtime(destination_filename)).to eq(File.mtime(source_filename))
 end
+
+Then(/^"([^"]*)" and "([^"]*)" should have the same content$/) do |source, destination|
+  source_filename = tmp_file_name(source)
+  destination_filename = tmp_file_name(destination)
+
+  expect(Digest::SHA256.hexdigest(File.read(destination_filename))).to eq(Digest::SHA256.hexdigest(File.read(source_filename)))
+end
