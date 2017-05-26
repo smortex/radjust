@@ -1,0 +1,13 @@
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - ruby-bundler
+      - freebsd-buildutils
+
+script: freebsd-make && freebsd-make test
