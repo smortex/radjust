@@ -1,4 +1,6 @@
-PROG=	client
-MK_MAN=	no
+PROG=		client
+WITHOUT_MAN=
+CFLAGS+=	-I../libadjust
+LDADD+=		../libadjust/libadjust.a
 
 .include <bsd.prog.mk>

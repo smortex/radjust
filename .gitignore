@@ -1,7 +1,12 @@
+.bundle
 .depend
 .depend.*
 *.o
+*.po
 *.debug
 *.full
+Gemfile.lock
 client/client
+libadjust/libadjust.a
+libadjust/libadjust_p.a
 server/server
