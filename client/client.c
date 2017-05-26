@@ -6,6 +6,8 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
+int		 send_file(char *filename);
+
 int
 main(int argc, char *argv[])
 {
@@ -14,12 +16,20 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
+    send_file(argv[1]);
+
+    exit(EXIT_SUCCESS);
+}
+
+int
+send_file(char *filename)
+{
     struct file_info *info;
-    info = file_info_new(argv[1]);
+    if (!(info = file_info_new(filename)))
+	return -1;
 
     printf("%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
 
     file_info_free(info);
-
-    exit(EXIT_SUCCESS);
+    return 0;
 }

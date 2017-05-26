@@ -10,6 +10,12 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
+void	 receive_file(char *filename, struct file_info *remote_info);
+void	 adjust_file(char *filename, struct file_info *remote_info);
+void	 adjust_file_size(int fd, off_t size);
+void	 adjust_file_content(int fd);
+void	 adjust_file_mtime(int fd, struct timespec mtime);
+
 int
 main(int argc, char *argv[])
 {
@@ -32,12 +38,20 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
+    receive_file(argv[1], remote_info);
+
+    exit(EXIT_SUCCESS);
+}
+
+void
+receive_file(char *filename, struct file_info *remote_info)
+{
     struct file_info *local_info;
 
-    if ((local_info = file_info_new(argv[1]))) {
+    if ((local_info = file_info_new(filename))) {
 	if (0 == file_info_cmp(local_info, remote_info)) {
 	    warnx("file match");
-	    exit(EXIT_SUCCESS);
+	    return;
 	} else {
 	    warnx("need adjusting");
 	}
@@ -49,22 +63,45 @@ main(int argc, char *argv[])
 	}
     }
 
+    adjust_file(filename, remote_info);
+}
+
+void
+adjust_file(char *filename, struct file_info *remote_info)
+{
     int fd;
-    if ((fd = open(argv[1], O_RDWR | O_CREAT, 0666)) < 0)
+    if ((fd = open(filename, O_RDWR | O_CREAT, 0666)) < 0)
 	err(EXIT_FAILURE, "open");
 
-    if (ftruncate(fd, remote_info->size) < 0)
+    adjust_file_size(fd, remote_info->size);
+    adjust_file_content(fd);
+    adjust_file_mtime(fd, remote_info->mtime);
+
+    close(fd);
+}
+
+void
+adjust_file_size(int fd, off_t size)
+{
+    if (ftruncate(fd, size) < 0)
 	err(EXIT_FAILURE, "ftruncate");
+}
 
-    /* FIXME Sync content */
+void
+adjust_file_content(int fd)
+{
+    (void) fd;
+    /* FIXME */
+}
 
+void
+adjust_file_mtime(int fd, struct timespec mtime)
+{
     struct timespec times[] = {
 	{ 0, UTIME_OMIT },
-	remote_info->mtime,
+	mtime,
     };
 
-    futimens(fd, times);
-    close(fd);
-
-    exit(EXIT_SUCCESS);
+    if (futimens(fd, times) < 0)
+	err(EXIT_FAILURE, "futimens");
 }
