@@ -1,6 +1,6 @@
 require 'securerandom'
 
-Given(/^a file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
+Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
   filename = tmp_file_name(name)
 
   File.open(filename, 'wb') do |f|
