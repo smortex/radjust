@@ -1,5 +1,5 @@
 #include <string.h>
-#include <sha256.h>
+#include <inttypes.h>
 
 #include <sys/param.h>
 #include <sys/types.h>

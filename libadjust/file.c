@@ -4,7 +4,11 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 
+#if defined(__FreeBSD__)
 #include <sha256.h>
+#elif defined(__linux__)
+#  include <openssl/sha.h>
+#endif
 
 #include "adjust.h"
 #include "adjust_internal.h"

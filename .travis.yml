@@ -9,5 +9,6 @@ addons:
     packages:
       - ruby-bundler
       - freebsd-buildutils
+      - libssl-dev
 
 script: freebsd-make && freebsd-make test
