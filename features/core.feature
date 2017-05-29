@@ -34,3 +34,5 @@ Feature: File adjustement
     Then "source" and "target" should have the same size
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
+    And the client should have sent 8288 B
+    And the client should have received 131075 B

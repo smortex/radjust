@@ -11,6 +11,9 @@
 static void		 recv_data(int fd, void *data, size_t length);
 static void		 send_data(int fd, void *data, size_t length);
 
+static int byte_send = 0;
+static int byte_recv = 0;
+
 void
 send_changed_block_chunks(int fd, struct file_info *file)
 {
@@ -70,10 +73,21 @@ static void
 send_data(int fd, void *data, size_t length)
 {
     send(fd, data, length, 0);
+    byte_send += length;
 }
 
 static void
 recv_data(int fd, void *data, size_t length)
 {
     recv(fd, data, length, 0);
+    byte_recv += length;
+}
+
+void
+get_xfer_stats(int *send, int *recv)
+{
+    if (send)
+	*send = byte_send;
+    if (recv)
+	*recv = byte_recv;
 }

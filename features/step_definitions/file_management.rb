@@ -20,7 +20,8 @@ Given(/^"([^"]*)" is a copy of "([^"]*)" with 1 byte changed$/) do |destination,
 
   FileUtils.cp(source_filename, destination_filename)
   File.open(destination_filename, 'r+') do |f|
-    pos = rand(File.size(destination_filename))
+    block_size = 16 * 1024 * 1024
+    pos = rand(File.size(destination_filename) / block_size * block_size)
     f.seek(pos)
     data = f.readbyte
     data ^= 1
@@ -64,4 +65,12 @@ Then(/^"([^"]*)" and "([^"]*)" should have the same content$/) do |source, desti
   destination_filename = tmp_file_name(destination)
 
   expect(Digest::SHA256.hexdigest(File.read(destination_filename))).to eq(Digest::SHA256.hexdigest(File.read(source_filename)))
+end
+
+Then(/^the client should have sent (#{FILESIZE})$/) do |n|
+  expect(@client_stdout).to match(/sent #{n} bytes/)
+end
+
+Then(/^the client should have received (#{FILESIZE})$/) do |n|
+  expect(@client_stdout).to match(/received #{n} bytes/)
 end

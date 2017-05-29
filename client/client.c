@@ -87,6 +87,12 @@ send_file(const char *filename)
     break;
     }
 
+    int byte_send, byte_recv;
+
+    get_xfer_stats(&byte_send, &byte_recv);
+    printf("client: synchronized %ld bytes\n", info->size);
+    printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
+
     file_close(info);
     file_info_free(info);
     close(sock);
