@@ -36,6 +36,7 @@ send_file(const char *filename)
     if (!(info = file_info_new(filename)))
 	return -1;
 
+    file_open(info, O_RDONLY);
 
     int sock = socket(PF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un address;
@@ -58,7 +59,15 @@ send_file(const char *filename)
     switch (buffer[0]) {
     case ADJUST_FILE_UPTODATE:
 	break;
-    case ADJUST_FILE_MISMATCH:
+    case ADJUST_FILE_MISMATCH: {
+	map_first_block(info);
+	send_changed_block_chunks(sock, info);
+
+	while (map_next_block(info)) {
+	    send_changed_block_chunks(sock, info);
+	}
+    }
+    break;
     case ADJUST_FILE_MISSING: {
 	off_t data_sent = 0;
 	int fd = open(filename, O_RDONLY);
@@ -78,6 +87,7 @@ send_file(const char *filename)
     break;
     }
 
+    file_close(info);
     file_info_free(info);
     close(sock);
 

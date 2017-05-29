@@ -15,10 +15,13 @@
 #include "adjust_internal.h"
 
 void	 receive_file(const char *filename, const struct file_info *remote_info, int client);
-void	 adjust_file(const char *filename, const struct file_info *remote_info, int client);
-void	 adjust_file_size(const int fd, const off_t size);
-void	 adjust_file_content(const int fd, const int size, int client);
-void	 adjust_file_mtime(const int fd, const struct timespec mtime);
+void	 adjust_file(struct file_info *local_info, const struct file_info *remote_info, int client);
+void	 adjust_file_size(struct file_info *file, const off_t size);
+void	 adjust_file_content(struct file_info *file, int client);
+void	 adjust_file_mtime(const struct file_info *file, const struct timespec mtime);
+
+void	 recv_changed_chunks(struct file_info *file, int client);
+void	 recv_whole_file_content(struct file_info *file, int client);
 
 int
 main(int argc, char *argv[])
@@ -85,12 +88,15 @@ receive_file(const char *filename, const struct file_info *remote_info, int clie
 	    return;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
+	    local_info->transfer_mode = TM_DELTA;
 	    warnx("need adjusting");
 	}
-	file_info_free(local_info);
     } else {
 	if (errno == ENOENT) {
 	    answer = ADJUST_FILE_MISSING;
+	    local_info = file_info_alloc();
+	    local_info->filename = strdup(filename);
+	    local_info->transfer_mode = TM_WHOLE_FILE;
 	    warnx("destination file does not exist");
 	} else {
 	    err(EXIT_FAILURE, "file_info_new");
@@ -99,39 +105,66 @@ receive_file(const char *filename, const struct file_info *remote_info, int clie
 
     send(client, &answer, 1, 0);
 
-    adjust_file(filename, remote_info, client);
+    adjust_file(local_info, remote_info, client);
+    file_info_free(local_info);
 }
 
 void
-adjust_file(const char *filename, const struct file_info *remote_info, int client)
+adjust_file(struct file_info *local_info, const struct file_info *remote_info, int client)
 {
-    int fd;
-    if ((fd = open(filename, O_RDWR | O_CREAT, 0666)) < 0)
+    if (file_open(local_info, O_RDWR | O_CREAT) < 0)
 	err(EXIT_FAILURE, "open");
 
-    adjust_file_size(fd, remote_info->size);
-    adjust_file_content(fd, remote_info->size, client);
-    adjust_file_mtime(fd, remote_info->mtime);
+    adjust_file_size(local_info, remote_info->size);
 
-    close(fd);
+    adjust_file_content(local_info, client);
+
+    adjust_file_mtime(local_info, remote_info->mtime);
+
+    file_close(local_info);
 }
 
 void
-adjust_file_size(const int fd, const off_t size)
+adjust_file_size(struct file_info *file, const off_t size)
 {
-    if (ftruncate(fd, size) < 0)
+    if (ftruncate(file->fd, size) < 0)
 	err(EXIT_FAILURE, "ftruncate");
+
+    file->size = size;
 }
 
 void
-adjust_file_content(const int fd, const int size, int client)
+adjust_file_content(struct file_info *file, int client)
+{
+    switch (file->transfer_mode) {
+    case TM_DELTA:
+	recv_changed_chunks(file, client);
+	break;
+    case TM_WHOLE_FILE:
+	recv_whole_file_content(file, client);
+	break;
+    }
+}
+
+void
+recv_changed_chunks(struct file_info *file, int client)
+{
+    map_first_block(file);
+    recv_changed_block_chunks(client, file);
+
+    while (map_next_block(file))
+	recv_changed_block_chunks(client, file);
+}
+
+void
+recv_whole_file_content(struct file_info *file, int client)
 {
     char buffer[BUFSIZ];
     int total = 0;
 
-    while (total < size) {
+    while (total < file->size) {
 	int n = recv(client, buffer, sizeof(buffer), 0);
-	if (write(fd, buffer, n) != n)
+	if (write(file->fd, buffer, n) != n)
 	    err(EXIT_FAILURE, "write");
 
 	total += n;
@@ -139,13 +172,15 @@ adjust_file_content(const int fd, const int size, int client)
 }
 
 void
-adjust_file_mtime(const int fd, const struct timespec mtime)
+adjust_file_mtime(const struct file_info *file, const struct timespec mtime)
 {
+    fsync(file->fd);
+
     struct timespec times[] = {
 	{ 0, UTIME_OMIT },
 	mtime,
     };
 
-    if (futimens(fd, times) < 0)
+    if (futimens(file->fd, times) < 0)
 	err(EXIT_FAILURE, "futimens");
 }

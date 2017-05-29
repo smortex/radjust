@@ -11,6 +11,9 @@ file_info_alloc(void)
     struct file_info *res;
     res = malloc(sizeof(*res));
     res->filename = NULL;
+    res->fd = 0;
+    res->offset = 0;
+    res->data = NULL;
     return res;
 }
 

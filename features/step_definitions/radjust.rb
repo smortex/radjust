@@ -1,6 +1,8 @@
 require 'English'
 
 When(/^I synchronize "([^"]*)" \-> "([^"]*)"$/) do |source, destination|
+  File.unlink('socket') if File.exist?('socket')
+
   server_pid = spawn("./server/server #{tmp_file_name(destination)}")
 
   sleep 0.001 until File.exist?('socket')

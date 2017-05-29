@@ -14,6 +14,21 @@ Given(/^a file "([^"]*)" does not exist$/) do |name|
   File.unlink(filename) if File.exist?(filename)
 end
 
+Given(/^"([^"]*)" is a copy of "([^"]*)" with 1 byte changed$/) do |destination, source|
+  source_filename = tmp_file_name(source)
+  destination_filename = tmp_file_name(destination)
+
+  FileUtils.cp(source_filename, destination_filename)
+  File.open(destination_filename, 'r+') do |f|
+    pos = rand(File.size(destination_filename))
+    f.seek(pos)
+    data = f.readbyte
+    data ^= 1
+    f.seek(pos)
+    f.write(data)
+  end
+end
+
 Given(/^I wait (\d*.\d*) s$/) do |duration|
   sleep duration.to_f
 end
@@ -28,6 +43,13 @@ Then(/^the file "([^"]*)" sould be (#{FILESIZE}) long$/) do |name, size|
   filename = tmp_file_name(name)
 
   expect(File.stat(filename).size).to eq(size.to_i)
+end
+
+Then(/^"([^"]*)" and "([^"]*)" should have the same size$/) do |source, destination|
+  source_filename = tmp_file_name(source)
+  destination_filename = tmp_file_name(destination)
+
+  expect(File.size(destination_filename)).to eq(File.size(source_filename))
 end
 
 Then(/^"([^"]*)" and "([^"]*)" should have the same mtime$/) do |source, destination|
