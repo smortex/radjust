@@ -46,7 +46,7 @@ send_file(const char *filename)
     int res = connect(sock, (struct sockaddr *)&address, sizeof(address));
 
     if (res < 0)
-	    err(EXIT_FAILURE, "connect");
+	err(EXIT_FAILURE, "connect");
 
 
     char buffer[BUFSIZ];
@@ -59,24 +59,23 @@ send_file(const char *filename)
     case ADJUST_FILE_UPTODATE:
 	break;
     case ADJUST_FILE_MISMATCH:
-    case ADJUST_FILE_MISSING:
-	{
-	    off_t data_sent = 0;
-	    int fd = open(filename, O_RDONLY);
+    case ADJUST_FILE_MISSING: {
+	off_t data_sent = 0;
+	int fd = open(filename, O_RDONLY);
 
-	    while (data_sent < info->size) {
+	while (data_sent < info->size) {
 
-		int res = read(fd, buffer, MIN((off_t)sizeof(buffer), info->size - data_sent));
+	    int res = read(fd, buffer, MIN((off_t)sizeof(buffer), info->size - data_sent));
 
-		if (send(sock, buffer, res, 0) != res)
-		    err(EXIT_FAILURE, "send");
-		data_sent += res;
-	    }
-
-	    close(fd);
+	    if (send(sock, buffer, res, 0) != res)
+		err(EXIT_FAILURE, "send");
+	    data_sent += res;
 	}
 
-	break;
+	close(fd);
+    }
+
+    break;
     }
 
     file_info_free(info);

@@ -47,8 +47,8 @@ main(int argc, char *argv[])
 
     recv(client_sock, p, 1, 0);
     while (*p != '\n') {
-	    p++;
-	    recv(client_sock, p, 1, 0);
+	p++;
+	recv(client_sock, p, 1, 0);
     }
 
 
