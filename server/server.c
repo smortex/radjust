@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 
     struct file_info *remote_info;
     remote_info = file_info_alloc();
-    remote_info->filename = filename;
+    remote_info->filename = strdup(filename);
 
     if (sscanf(buffer, "%[^:]:%ld:%ld.%9ld", filename, &remote_info->size, &remote_info->mtime.tv_sec, &remote_info->mtime.tv_nsec) != 4) {
 	perror("sscanf");
@@ -66,6 +66,7 @@ main(int argc, char *argv[])
     receive_file(argv[1], remote_info, client_sock);
 
     unlink("socket");
+    file_info_free(remote_info);
 
     exit(EXIT_SUCCESS);
 }
@@ -86,6 +87,7 @@ receive_file(const char *filename, const struct file_info *remote_info, int clie
 	    answer = ADJUST_FILE_MISMATCH;
 	    warnx("need adjusting");
 	}
+	file_info_free(local_info);
     } else {
 	if (errno == ENOENT) {
 	    answer = ADJUST_FILE_MISSING;
