@@ -18,7 +18,6 @@
 int	 receive_file(const int fd, const char *filename, const struct file_info *remote_info) __attribute__((warn_unused_result));
 int	 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info) __attribute__((warn_unused_result));
 
-int	 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
 int
 main(int argc, char *argv[])
@@ -130,20 +129,4 @@ adjust_file(const int fd, struct file_info *local_info, const struct file_info *
 	return -1;
 
     return 0;
-}
-
-
-int
-file_recv_content(const int fd, struct file_info *file)
-{
-    switch (file->transfer_mode) {
-    case TM_ADJUST:
-	return recv_file_adjustments(fd, file);
-	break;
-    case TM_WHOLE_FILE:
-	return recv_whole_file_content(fd, file);
-	break;
-    }
-
-    return -1; /* NOTREACHED */
 }

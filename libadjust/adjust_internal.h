@@ -39,4 +39,7 @@ int		 file_map_next_block(struct file_info *file) __attribute__((warn_unused_res
 int		 file_set_size(struct file_info *file, const off_t size) __attribute__((warn_unused_result));
 int		 file_set_mtime(const struct file_info *file, const struct timespec mtime) __attribute__((warn_unused_result));
 
+int		 file_send_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
+int		 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
+
 #endif /* !_ADJUST_INTERNAL_H */

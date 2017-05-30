@@ -18,8 +18,6 @@
 int		 xfer_file(const char *filename) __attribute__((warn_unused_result));
 int		 send_file(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int		 file_send_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
-
 int
 main(int argc, char *argv[])
 {
@@ -96,19 +94,4 @@ send_file(const int fd, struct file_info *file)
     }
 
     return file_send_content(fd, file);
-}
-
-int
-file_send_content(const int fd, struct file_info *file)
-{
-    switch (file->transfer_mode) {
-    case TM_ADJUST:
-	return send_file_adjustments(fd, file);
-	break;
-    case TM_WHOLE_FILE:
-	return send_whole_file_content(fd, file);
-	break;
-    }
-
-    return -1; /* NOTREACHED */
 }
