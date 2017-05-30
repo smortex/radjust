@@ -15,13 +15,13 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-void	 receive_file(const int fd, const char *filename, const struct file_info *remote_info);
-void	 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info);
+int	 receive_file(const int fd, const char *filename, const struct file_info *remote_info) __attribute__((warn_unused_result));
+int	 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info) __attribute__((warn_unused_result));
 
-int	 file_recv_content(const int fd, struct file_info *file);
+int	 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int	 recv_file_adjustments(const int fd, struct file_info *file);
-int	 recv_whole_file_content(const int fd, struct file_info *file);
+int	 recv_file_adjustments(const int fd, struct file_info *file) __attribute__((warn_unused_result));
+int	 recv_whole_file_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
 int
 main(int argc, char *argv[])
@@ -66,7 +66,8 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    receive_file(client_sock, argv[1], remote_info);
+    if (receive_file(client_sock, argv[1], remote_info) < 0)
+	err(EXIT_FAILURE, "receive_file");
 
     unlink("socket");
     file_info_free(remote_info);
@@ -74,18 +75,18 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
-void
+int
 receive_file(const int fd, const char *filename, const struct file_info *remote_info)
 {
+    int res = 0;
     struct file_info *local_info;
-
     char answer;
 
     if ((local_info = file_info_new(filename))) {
 	if (0 == file_info_cmp(local_info, remote_info)) {
 	    answer = ADJUST_FILE_UPTODATE;
 	    warnx("file match");
-	    return;
+	    return res;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
 	    local_info->transfer_mode = TM_ADJUST;
@@ -99,29 +100,39 @@ receive_file(const int fd, const char *filename, const struct file_info *remote_
 	    local_info->transfer_mode = TM_WHOLE_FILE;
 	    warnx("destination file does not exist");
 	} else {
-	    err(EXIT_FAILURE, "file_info_new");
+	    return -1;
 	}
     }
 
     send(fd, &answer, 1, 0);
 
-    adjust_file(fd, local_info, remote_info);
+    if (adjust_file(fd, local_info, remote_info) < 0)
+	res = -1;
+
     file_info_free(local_info);
+
+    return res;
 }
 
-void
+int
 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info)
 {
     if (file_open(local_info, O_RDWR | O_CREAT) < 0)
 	err(EXIT_FAILURE, "open");
 
-    file_set_size(local_info, remote_info->size);
+    if (file_set_size(local_info, remote_info->size) < 0)
+	return -1;
 
-    file_recv_content(fd, local_info);
+    if (file_recv_content(fd, local_info) < 0)
+	return -1;
 
-    file_set_mtime(local_info, remote_info->mtime);
+    if (file_set_mtime(local_info, remote_info->mtime) < 0)
+	return -1;
 
-    file_close(local_info);
+    if (file_close(local_info) < 0)
+	return -1;
+
+    return 0;
 }
 
 

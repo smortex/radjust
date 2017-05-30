@@ -15,13 +15,13 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-int		 xfer_file(const char *filename);
-int		 send_file(const int fd, struct file_info *file);
+int		 xfer_file(const char *filename) __attribute__((warn_unused_result));
+int		 send_file(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int		 file_send_content(const int fd, struct file_info *file);
+int		 file_send_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int		 send_file_adjustments(const int fd, struct file_info *file);
-int		 send_whole_file_content(const int fd, struct file_info *file);
+int		 send_file_adjustments(const int fd, struct file_info *file) __attribute__((warn_unused_result));
+int		 send_whole_file_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
 int
 main(int argc, char *argv[])
@@ -31,7 +31,8 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    xfer_file(argv[1]);
+    if (xfer_file(argv[1]) < 0)
+	err(EXIT_FAILURE, "xfer_file");
 
     exit(EXIT_SUCCESS);
 }
@@ -43,7 +44,8 @@ xfer_file(const char *filename)
     if (!(info = file_info_new(filename)))
 	return -1;
 
-    file_open(info, O_RDONLY);
+    if (file_open(info, O_RDONLY) < 0)
+	return -1;
 
     int sock = socket(PF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un address;
@@ -62,9 +64,12 @@ xfer_file(const char *filename)
 
     send(sock, buffer, strlen(buffer), 0);
 
-    send_file(sock, info);
+    if (send_file(sock, info) < 0)
+	err(EXIT_FAILURE, "send_file");
 
-    file_close(info);
+    if (file_close(info) < 0)
+	return -1;
+
     file_info_free(info);
     close(sock);
 
@@ -93,9 +98,7 @@ send_file(const int fd, struct file_info *file)
 	break;
     }
 
-    file_send_content(fd, file);
-
-    return 0;
+    return file_send_content(fd, file);
 }
 
 int
@@ -117,7 +120,7 @@ int
 send_file_adjustments(const int fd, struct file_info *file)
 {
     if (file_map_first_block(file) < 0)
-	err(EXIT_FAILURE, "file_map_first_block");
+	return -1;
 
     send_block_adjustments(fd, file);
 
@@ -151,7 +154,7 @@ send_whole_file_content(const int fd, struct file_info *file)
 	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
 
 	if (send(fd, buffer, res, 0) != res)
-	    err(EXIT_FAILURE, "send");
+	    return -1;
 	data_sent += res;
     }
 
