@@ -11,8 +11,8 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-static int byte_send = 0;
-static int byte_recv = 0;
+static size_t byte_send = 0;
+static size_t byte_recv = 0;
 
 int sock;
 
@@ -249,7 +249,7 @@ recv_data(int fd, void *data, size_t length)
 }
 
 void
-get_xfer_stats(int *send, int *recv)
+get_networking_stats(size_t *send, size_t *recv)
 {
     if (send)
 	*send = byte_send;

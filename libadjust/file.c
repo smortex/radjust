@@ -20,6 +20,8 @@ static int		 map_current_block(struct file_info *file);
 static int		 unmap_current_block(struct file_info *file);
 static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
 
+static size_t synchronized;
+
 int
 libadjust_send_file(char *filename)
 {
@@ -42,12 +44,7 @@ libadjust_send_file(char *filename)
     if (file_close(info) < 0)
 	return -1;
 
-    int byte_send, byte_recv;
-
-    get_xfer_stats(&byte_send, &byte_recv);
-    printf("client: synchronized %ld bytes\n", info->size);
-    printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
-
+    synchronized += info->size;
     file_info_free(info);
 
     return 0;
@@ -83,6 +80,7 @@ libadjust_recv_file(char *filename)
 
     libadjust_terminate();
     unlink("socket");
+    synchronized += remote_info->size;
     file_info_free(remote_info);
 
     return 0;
@@ -300,4 +298,10 @@ file_recv_content(const int fd, struct file_info *file)
     }
 
     return res;
+}
+
+void
+get_xfer_stats(size_t *bytes)
+{
+    *bytes = synchronized;
 }

@@ -20,5 +20,12 @@ main(int argc, char *argv[])
 
     libadjust_terminate();
 
+    size_t byte_synchronized, byte_send, byte_recv;
+
+    get_xfer_stats(&byte_synchronized);
+    get_networking_stats(&byte_send, &byte_recv);
+    printf("client: synchronized %ld bytes\n", byte_synchronized);
+    printf("client: sent %ld bytes, received %ld bytes\n", byte_send, byte_recv);
+
     exit(EXIT_SUCCESS);
 }

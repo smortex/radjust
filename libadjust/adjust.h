@@ -22,6 +22,7 @@ int			 file_info_cmp(const struct file_info *left, const struct file_info *right
 
 void			 file_info_free(struct file_info *info);
 
-void			 get_xfer_stats(int *send, int *recv);
+void			 get_xfer_stats(size_t *bytes);
+void			 get_networking_stats(size_t *send, size_t *recv);
 
 #endif /* !_ADJUST_H */
