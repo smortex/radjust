@@ -15,13 +15,13 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-void	 receive_file(const char *filename, const struct file_info *remote_info, int client);
-void	 adjust_file(struct file_info *local_info, const struct file_info *remote_info, int client);
+void	 receive_file(const int fd, const char *filename, const struct file_info *remote_info);
+void	 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info);
 
-int	 file_recv_content(struct file_info *file, int client);
+int	 file_recv_content(const int fd, struct file_info *file);
 
-int	 recv_changed_chunks(struct file_info *file, int client);
-int	 recv_whole_file_content(struct file_info *file, int client);
+int	 recv_changed_chunks(const int fd, struct file_info *file);
+int	 recv_whole_file_content(const int fd, struct file_info *file);
 
 int
 main(int argc, char *argv[])
@@ -66,7 +66,7 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    receive_file(argv[1], remote_info, client_sock);
+    receive_file(client_sock, argv[1], remote_info);
 
     unlink("socket");
     file_info_free(remote_info);
@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 }
 
 void
-receive_file(const char *filename, const struct file_info *remote_info, int client)
+receive_file(const int fd, const char *filename, const struct file_info *remote_info)
 {
     struct file_info *local_info;
 
@@ -103,21 +103,21 @@ receive_file(const char *filename, const struct file_info *remote_info, int clie
 	}
     }
 
-    send(client, &answer, 1, 0);
+    send(fd, &answer, 1, 0);
 
-    adjust_file(local_info, remote_info, client);
+    adjust_file(fd, local_info, remote_info);
     file_info_free(local_info);
 }
 
 void
-adjust_file(struct file_info *local_info, const struct file_info *remote_info, int client)
+adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info)
 {
     if (file_open(local_info, O_RDWR | O_CREAT) < 0)
 	err(EXIT_FAILURE, "open");
 
     file_set_size(local_info, remote_info->size);
 
-    file_recv_content(local_info, client);
+    file_recv_content(fd, local_info);
 
     file_set_mtime(local_info, remote_info->mtime);
 
@@ -126,14 +126,14 @@ adjust_file(struct file_info *local_info, const struct file_info *remote_info, i
 
 
 int
-file_recv_content(struct file_info *file, int client)
+file_recv_content(const int fd, struct file_info *file)
 {
     switch (file->transfer_mode) {
     case TM_DELTA:
-	return recv_changed_chunks(file, client);
+	return recv_changed_chunks(fd, file);
 	break;
     case TM_WHOLE_FILE:
-	return recv_whole_file_content(file, client);
+	return recv_whole_file_content(fd, file);
 	break;
     }
 
@@ -141,12 +141,12 @@ file_recv_content(struct file_info *file, int client)
 }
 
 int
-recv_changed_chunks(struct file_info *file, int client)
+recv_changed_chunks(const int fd, struct file_info *file)
 {
     if (file_map_first_block(file) < 0)
 	return -1;
 
-    recv_changed_block_chunks(client, file);
+    recv_changed_block_chunks(fd, file);
 
     bool finished = false;
     while (!finished) {
@@ -158,7 +158,7 @@ recv_changed_chunks(struct file_info *file, int client)
 	    finished = true;
 	    break;
 	case 1:
-	    recv_changed_block_chunks(client, file);
+	    recv_changed_block_chunks(fd, file);
 	    break;
 	}
     }
@@ -167,13 +167,13 @@ recv_changed_chunks(struct file_info *file, int client)
 }
 
 int
-recv_whole_file_content(struct file_info *file, int client)
+recv_whole_file_content(const int fd, struct file_info *file)
 {
     char buffer[BUFSIZ];
     int total = 0;
 
     while (total < file->size) {
-	int n = recv(client, buffer, sizeof(buffer), 0);
+	int n = recv(fd, buffer, sizeof(buffer), 0);
 	if (write(file->fd, buffer, n) != n)
 	    err(EXIT_FAILURE, "write");
 
