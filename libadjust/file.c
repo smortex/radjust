@@ -80,8 +80,6 @@ libadjust_recv_file(char *filename)
     if (receive_file_data(sock, filename, remote_info) < 0)
 	return -1;
 
-    libadjust_terminate();
-    unlink("socket");
     synchronized += remote_info->size;
     file_info_free(remote_info);
 

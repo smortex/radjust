@@ -16,8 +16,10 @@ static size_t byte_recv = 0;
 
 int sock;
 
+static char *socket_name = "socket";
+
 int
-libadjust_connect(void)
+libadjust_socket_open_out(void)
 {
     if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
 	return -1;
@@ -26,7 +28,7 @@ libadjust_connect(void)
     bzero(&address, sizeof(address));
 
     address.sun_family = PF_UNIX;
-    strcpy(address.sun_path, "socket");
+    strcpy(address.sun_path, socket_name);
 
     if (connect(sock, (struct sockaddr *)&address, sizeof(address)) < 0)
 	return -1;
@@ -35,7 +37,7 @@ libadjust_connect(void)
 }
 
 int
-libadjust_serve(void)
+libadjust_socket_open_in(void)
 {
     if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
 	return -1;
@@ -44,7 +46,7 @@ libadjust_serve(void)
     bzero(&server_address, sizeof(server_address));
 
     server_address.sun_family = PF_UNIX;
-    strcpy(server_address.sun_path, "socket");
+    strcpy(server_address.sun_path, socket_name);
 
     if (bind(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
 	return -1;
@@ -63,8 +65,9 @@ libadjust_serve(void)
 }
 
 void
-libadjust_terminate(void)
+libadjust_socket_close(void)
 {
+    unlink(socket_name);
     close(sock);
 }
 

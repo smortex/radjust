@@ -12,13 +12,13 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    if (libadjust_serve() < 0)
-	err(EXIT_FAILURE, "libadjust_serve");
+    if (libadjust_socket_open_in() < 0)
+	err(EXIT_FAILURE, "libadjust_socket_open_in");
 
     if (libadjust_recv_file(argv[1]) < 0)
 	err(EXIT_FAILURE, "libadjust_recv_file");
 
-    libadjust_terminate();
+    libadjust_socket_close();
 
     size_t byte_synchronized, byte_send, byte_recv;
 
