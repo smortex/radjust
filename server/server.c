@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -16,12 +17,11 @@
 
 void	 receive_file(const char *filename, const struct file_info *remote_info, int client);
 void	 adjust_file(struct file_info *local_info, const struct file_info *remote_info, int client);
-void	 adjust_file_size(struct file_info *file, const off_t size);
-void	 adjust_file_content(struct file_info *file, int client);
-void	 adjust_file_mtime(const struct file_info *file, const struct timespec mtime);
 
-void	 recv_changed_chunks(struct file_info *file, int client);
-void	 recv_whole_file_content(struct file_info *file, int client);
+int	 file_recv_content(struct file_info *file, int client);
+
+int	 recv_changed_chunks(struct file_info *file, int client);
+int	 recv_whole_file_content(struct file_info *file, int client);
 
 int
 main(int argc, char *argv[])
@@ -115,48 +115,58 @@ adjust_file(struct file_info *local_info, const struct file_info *remote_info, i
     if (file_open(local_info, O_RDWR | O_CREAT) < 0)
 	err(EXIT_FAILURE, "open");
 
-    adjust_file_size(local_info, remote_info->size);
+    file_set_size(local_info, remote_info->size);
 
-    adjust_file_content(local_info, client);
+    file_recv_content(local_info, client);
 
-    adjust_file_mtime(local_info, remote_info->mtime);
+    file_set_mtime(local_info, remote_info->mtime);
 
     file_close(local_info);
 }
 
-void
-adjust_file_size(struct file_info *file, const off_t size)
-{
-    if (ftruncate(file->fd, size) < 0)
-	err(EXIT_FAILURE, "ftruncate");
 
-    file->size = size;
-}
-
-void
-adjust_file_content(struct file_info *file, int client)
+int
+file_recv_content(struct file_info *file, int client)
 {
     switch (file->transfer_mode) {
     case TM_DELTA:
-	recv_changed_chunks(file, client);
+	return recv_changed_chunks(file, client);
 	break;
     case TM_WHOLE_FILE:
-	recv_whole_file_content(file, client);
+	return recv_whole_file_content(file, client);
 	break;
     }
+
+    return -1; /* NOTREACHED */
 }
 
-void
+int
 recv_changed_chunks(struct file_info *file, int client)
 {
-    map_first_block(file);
+    if (file_map_first_block(file) < 0)
+	return -1;
+
     recv_changed_block_chunks(client, file);
 
-    while (map_next_block(file))
-	recv_changed_block_chunks(client, file);
+    bool finished = false;
+    while (!finished) {
+	switch (file_map_next_block(file)) {
+	case -1:
+	    return -1;
+	    break;
+	case 0:
+	    finished = true;
+	    break;
+	case 1:
+	    recv_changed_block_chunks(client, file);
+	    break;
+	}
+    }
+
+    return 0;
 }
 
-void
+int
 recv_whole_file_content(struct file_info *file, int client)
 {
     char buffer[BUFSIZ];
@@ -169,18 +179,6 @@ recv_whole_file_content(struct file_info *file, int client)
 
 	total += n;
     }
-}
 
-void
-adjust_file_mtime(const struct file_info *file, const struct timespec mtime)
-{
-    fsync(file->fd);
-
-    struct timespec times[] = {
-	{ 0, UTIME_OMIT },
-	mtime,
-    };
-
-    if (futimens(file->fd, times) < 0)
-	err(EXIT_FAILURE, "futimens");
+    return 0;
 }

@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -60,11 +61,24 @@ send_file(const char *filename)
     case ADJUST_FILE_UPTODATE:
 	break;
     case ADJUST_FILE_MISMATCH: {
-	map_first_block(info);
+	if (file_map_first_block(info) < 0)
+	    err(EXIT_FAILURE, "file_map_first_block");
+
 	send_changed_block_chunks(sock, info);
 
-	while (map_next_block(info)) {
-	    send_changed_block_chunks(sock, info);
+	bool finished = false;
+	while (!finished) {
+	    switch (file_map_next_block(info)) {
+	    case -1:
+		err(EXIT_FAILURE, "file_map_next_block");
+		break;
+	    case 0:
+		finished = true;
+		break;
+	    case 1:
+		send_changed_block_chunks(sock, info);
+		break;
+	    }
 	}
     }
     break;
