@@ -16,7 +16,6 @@
 #include "adjust_internal.h"
 
 int		 xfer_file(const char *filename) __attribute__((warn_unused_result));
-int		 send_file(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
 int
 main(int argc, char *argv[])
@@ -59,8 +58,8 @@ xfer_file(const char *filename)
 
     send(sock, buffer, strlen(buffer), 0);
 
-    if (send_file(sock, info) < 0)
-	err(EXIT_FAILURE, "send_file");
+    if (file_send(sock, info) < 0)
+	err(EXIT_FAILURE, "file_send");
 
     if (file_close(info) < 0)
 	return -1;
@@ -75,23 +74,4 @@ xfer_file(const char *filename)
     printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
 
     return 0;
-}
-
-int
-send_file(const int fd, struct file_info *file)
-{
-    char buffer;
-    recv(fd, &buffer, 1, 0);
-    switch (buffer) {
-    case ADJUST_FILE_UPTODATE:
-	break;
-    case ADJUST_FILE_MISMATCH:
-	file->transfer_mode = TM_ADJUST;
-	break;
-    case ADJUST_FILE_MISSING:
-	file->transfer_mode = TM_WHOLE_FILE;
-	break;
-    }
-
-    return file_send_content(fd, file);
 }

@@ -116,6 +116,46 @@ file_set_mtime(const struct file_info *file, const struct timespec mtime)
 }
 
 int
+file_send(const int fd, struct file_info *file)
+{
+    char buffer;
+    recv_data(fd, &buffer, 1);
+    switch (buffer) {
+    case ADJUST_FILE_UPTODATE:
+	break;
+    case ADJUST_FILE_MISMATCH:
+	file->transfer_mode = TM_ADJUST;
+	break;
+    case ADJUST_FILE_MISSING:
+	file->transfer_mode = TM_WHOLE_FILE;
+	break;
+    }
+
+    return file_send_content(fd, file);
+}
+
+int
+file_recv(const int fd, struct file_info *local, const struct file_info *remote)
+{
+    if (file_open(local, O_RDWR | O_CREAT) < 0)
+	return -1;
+
+    if (file_set_size(local, remote->size) < 0)
+	return -1;
+
+    if (file_recv_content(fd, local) < 0)
+	return -1;
+
+    if (file_set_mtime(local, remote->mtime) < 0)
+	return -1;
+
+    if (file_close(local) < 0)
+	return -1;
+
+    return 0;
+}
+
+int
 file_send_content(const int fd, struct file_info *file)
 {
     int res;

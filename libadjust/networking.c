@@ -10,9 +10,6 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-static void		 recv_data(int fd, void *data, size_t length);
-static void		 send_data(int fd, void *data, size_t length);
-
 static int byte_send = 0;
 static int byte_recv = 0;
 
@@ -158,14 +155,14 @@ recv_block_adjustments(const int fd, const struct file_info *file)
     }
 }
 
-static void
+void
 send_data(int fd, void *data, size_t length)
 {
     send(fd, data, length, 0);
     byte_send += length;
 }
 
-static void
+void
 recv_data(int fd, void *data, size_t length)
 {
     recv(fd, data, length, 0);

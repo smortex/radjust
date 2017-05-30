@@ -16,7 +16,6 @@
 #include "adjust_internal.h"
 
 int	 receive_file(const int fd, const char *filename, const struct file_info *remote_info) __attribute__((warn_unused_result));
-int	 adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info) __attribute__((warn_unused_result));
 
 
 int
@@ -102,31 +101,10 @@ receive_file(const int fd, const char *filename, const struct file_info *remote_
 
     send(fd, &answer, 1, 0);
 
-    if (adjust_file(fd, local_info, remote_info) < 0)
+    if (file_recv(fd, local_info, remote_info) < 0)
 	res = -1;
 
     file_info_free(local_info);
 
     return res;
-}
-
-int
-adjust_file(const int fd, struct file_info *local_info, const struct file_info *remote_info)
-{
-    if (file_open(local_info, O_RDWR | O_CREAT) < 0)
-	err(EXIT_FAILURE, "open");
-
-    if (file_set_size(local_info, remote_info->size) < 0)
-	return -1;
-
-    if (file_recv_content(fd, local_info) < 0)
-	return -1;
-
-    if (file_set_mtime(local_info, remote_info->mtime) < 0)
-	return -1;
-
-    if (file_close(local_info) < 0)
-	return -1;
-
-    return 0;
 }

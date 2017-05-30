@@ -20,6 +20,9 @@ struct file_info {
     int mmap_mode;
 };
 
+void		 recv_data(int fd, void *data, size_t length);
+void		 send_data(int fd, void *data, size_t length);
+
 int		 file_open(struct file_info *file, int mode) __attribute__((warn_unused_result));
 int		 file_close(struct file_info *file) __attribute__((warn_unused_result));
 
@@ -38,6 +41,9 @@ int		 file_map_first_block(struct file_info *file) __attribute__((warn_unused_re
 int		 file_map_next_block(struct file_info *file) __attribute__((warn_unused_result));
 int		 file_set_size(struct file_info *file, const off_t size) __attribute__((warn_unused_result));
 int		 file_set_mtime(const struct file_info *file, const struct timespec mtime) __attribute__((warn_unused_result));
+
+int		 file_send(const int fd, struct file_info *file) __attribute__((warn_unused_result));
+int		 file_recv(const int fd, struct file_info *local, const struct file_info *remote) __attribute__((warn_unused_result));
 
 int		 file_send_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 int		 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
