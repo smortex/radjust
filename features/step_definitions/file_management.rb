@@ -5,6 +5,7 @@ Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
 
   File.open(filename, 'wb') do |f|
     f.write(SecureRandom.random_bytes(size.to_i))
+    f.fsync
   end
 end
 
@@ -27,11 +28,8 @@ Given(/^"([^"]*)" is a copy of "([^"]*)" with 1 byte changed$/) do |destination,
     data ^= 1
     f.seek(pos)
     f.write(data)
+    f.fsync
   end
-end
-
-Given(/^I wait (\d*.\d*) s$/) do |duration|
-  sleep duration.to_f
 end
 
 Then(/^the file "([^"]*)" should exist$/) do |name|
