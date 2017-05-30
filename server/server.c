@@ -26,27 +26,16 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    int server_sock = socket(PF_UNIX, SOCK_STREAM, 0);
-
-    struct sockaddr_un server_address;
-    server_address.sun_family = PF_UNIX;
-    strcpy(server_address.sun_path, "socket");
-
-    bind(server_sock, (struct sockaddr *)&server_address, sizeof(server_address));
-
-    listen(server_sock, 1);
-
-    struct sockaddr_un client_address;
-    socklen_t client_len = sizeof(client_address);
-    int client_sock = accept(server_sock, (struct sockaddr *)&client_address, &client_len);
+    if (libadjust_serve() < 0)
+	return -1;
 
     char buffer[BUFSIZ];
     char *p = buffer;
 
-    recv(client_sock, p, 1, 0);
+    recv(sock, p, 1, 0);
     while (*p != '\n') {
 	p++;
-	recv(client_sock, p, 1, 0);
+	recv(sock, p, 1, 0);
     }
 
 
@@ -61,9 +50,10 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    if (receive_file(client_sock, argv[1], remote_info) < 0)
+    if (receive_file(sock, argv[1], remote_info) < 0)
 	err(EXIT_FAILURE, "receive_file");
 
+    libadjust_terminate();
     unlink("socket");
     file_info_free(remote_info);
 

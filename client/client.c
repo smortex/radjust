@@ -25,8 +25,13 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
+    if (libadjust_connect() < 0)
+	err(EXIT_FAILURE, "libadjust_connect");
+
     if (xfer_file(argv[1]) < 0)
 	err(EXIT_FAILURE, "xfer_file");
+
+    libadjust_terminate();
 
     exit(EXIT_SUCCESS);
 }
@@ -41,18 +46,6 @@ xfer_file(const char *filename)
     if (file_open(info, O_RDONLY) < 0)
 	return -1;
 
-    int sock = socket(PF_UNIX, SOCK_STREAM, 0);
-    struct sockaddr_un address;
-
-    address.sun_family = PF_UNIX;
-    strcpy(address.sun_path, "socket");
-
-    int res = connect(sock, (struct sockaddr *)&address, sizeof(address));
-
-    if (res < 0)
-	err(EXIT_FAILURE, "connect");
-
-
     char buffer[BUFSIZ];
     sprintf(buffer, "%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
 
@@ -63,8 +56,6 @@ xfer_file(const char *filename)
 
     if (file_close(info) < 0)
 	return -1;
-
-    close(sock);
 
     int byte_send, byte_recv;
 

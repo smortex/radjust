@@ -6,6 +6,8 @@
 #define LARGE_BLOCK_SIZE (16 * 1024 * 1024)
 #define SMALL_BLOCK_SIZE (4 * 1024)
 
+extern int sock;
+
 struct file_info {
     char *filename;
     off_t size;

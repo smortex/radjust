@@ -6,12 +6,64 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 
 #include "adjust.h"
 #include "adjust_internal.h"
 
 static int byte_send = 0;
 static int byte_recv = 0;
+
+int sock;
+
+int
+libadjust_connect(void)
+{
+    if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
+	return -1;
+
+    struct sockaddr_un address;
+
+    address.sun_family = PF_UNIX;
+    strcpy(address.sun_path, "socket");
+
+    if (connect(sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+	return -1;
+
+    return 0;
+}
+
+int
+libadjust_serve(void)
+{
+    if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
+	return -1;
+
+    struct sockaddr_un server_address;
+    server_address.sun_family = PF_UNIX;
+    strcpy(server_address.sun_path, "socket");
+
+    if (bind(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
+	return -1;
+
+    if (listen(sock, 1) < 0)
+	return -1;
+
+    struct sockaddr_un client_address;
+    socklen_t client_len = sizeof(client_address);
+    int client_sock = accept(sock, (struct sockaddr *)&client_address, &client_len);
+
+    close(sock);
+    sock = client_sock;
+
+    return 0;
+}
+
+void
+libadjust_terminate(void)
+{
+    close(sock);
+}
 
 int
 send_whole_file_content(const int fd, struct file_info *file)

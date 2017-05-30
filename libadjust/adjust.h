@@ -5,6 +5,10 @@
 #define ADJUST_FILE_MISMATCH 1
 #define ADJUST_FILE_MISSING  2
 
+int			 libadjust_connect(void) __attribute__((warn_unused_result));
+int			 libadjust_serve(void) __attribute__((warn_unused_result));
+void			 libadjust_terminate(void);
+
 struct file_info;
 
 struct file_info	*file_info_alloc(void) __attribute__((warn_unused_result));
