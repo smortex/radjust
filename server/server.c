@@ -20,7 +20,6 @@ int	 adjust_file(const int fd, struct file_info *local_info, const struct file_i
 
 int	 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int	 recv_file_adjustments(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 int	 recv_whole_file_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
 int
@@ -149,32 +148,6 @@ file_recv_content(const int fd, struct file_info *file)
     }
 
     return -1; /* NOTREACHED */
-}
-
-int
-recv_file_adjustments(const int fd, struct file_info *file)
-{
-    if (file_map_first_block(file) < 0)
-	return -1;
-
-    recv_block_adjustments(fd, file);
-
-    bool finished = false;
-    while (!finished) {
-	switch (file_map_next_block(file)) {
-	case -1:
-	    return -1;
-	    break;
-	case 0:
-	    finished = true;
-	    break;
-	case 1:
-	    recv_block_adjustments(fd, file);
-	    break;
-	}
-    }
-
-    return 0;
 }
 
 int
