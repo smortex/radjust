@@ -20,6 +20,7 @@ static int		 map_current_block(struct file_info *file);
 static int		 unmap_current_block(struct file_info *file);
 static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
 
+extern int sock;
 static size_t synchronized;
 
 int
