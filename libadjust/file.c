@@ -1,4 +1,7 @@
 #include <fcntl.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <sys/mman.h>
@@ -15,6 +18,115 @@
 
 static int		 map_current_block(struct file_info *file);
 static int		 unmap_current_block(struct file_info *file);
+static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
+
+int
+libadjust_send_file(char *filename)
+{
+    struct file_info *info;
+    if (!(info = file_info_new(filename)))
+	return -1;
+
+    if (file_open(info, O_RDONLY) < 0)
+	return -1;
+
+    char buffer[BUFSIZ];
+    sprintf(buffer, "%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
+
+    if (send_data(sock, buffer, strlen(buffer)) != (int) strlen(buffer))
+	return -1;
+
+    if (file_send(sock, info) < 0)
+	return -1;
+
+    if (file_close(info) < 0)
+	return -1;
+
+    int byte_send, byte_recv;
+
+    get_xfer_stats(&byte_send, &byte_recv);
+    printf("client: synchronized %ld bytes\n", info->size);
+    printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
+
+    file_info_free(info);
+
+    return 0;
+}
+
+int
+libadjust_recv_file(char *filename)
+{
+    char buffer[BUFSIZ];
+    char *p = buffer;
+
+    if (recv_data(sock, p, 1) != 1)
+	return -1;
+
+    while (*p != '\n') {
+	p++;
+	if (recv_data(sock, p, 1) != 1)
+	    return -1;
+    }
+
+    char remote_filename[BUFSIZ];
+
+    struct file_info *remote_info;
+    remote_info = file_info_alloc();
+
+    if (sscanf(buffer, "%[^:]:%ld:%ld.%9ld", remote_filename, &remote_info->size, &remote_info->mtime.tv_sec, &remote_info->mtime.tv_nsec) != 4)
+	return -1;
+
+    remote_info->filename = strdup(filename);
+
+    if (receive_file_data(sock, filename, remote_info) < 0)
+	return -1;
+
+    libadjust_terminate();
+    unlink("socket");
+    file_info_free(remote_info);
+
+    return 0;
+}
+
+int
+receive_file_data(const int fd, const char *filename, const struct file_info *remote_info)
+{
+    int res = 0;
+    struct file_info *local_info;
+    char answer;
+
+    if ((local_info = file_info_new(filename))) {
+	if (0 == file_info_cmp(local_info, remote_info)) {
+	    answer = ADJUST_FILE_UPTODATE;
+	    // warnx("file match");
+	    return res;
+	} else {
+	    answer = ADJUST_FILE_MISMATCH;
+	    local_info->transfer_mode = TM_ADJUST;
+	    // warnx("need adjusting");
+	}
+    } else {
+	if (errno == ENOENT) {
+	    answer = ADJUST_FILE_MISSING;
+	    local_info = file_info_alloc();
+	    local_info->filename = strdup(filename);
+	    local_info->transfer_mode = TM_WHOLE_FILE;
+	    // warnx("destination file does not exist");
+	} else {
+	    return -1;
+	}
+    }
+
+    if (send_data(fd, &answer, 1) != 1)
+	return -1;
+
+    if (file_recv(fd, local_info, remote_info) < 0)
+	res = -1;
+
+    file_info_free(local_info);
+
+    return res;
+}
 
 void
 sha256(const void *data, const size_t length, unsigned char digest[32])

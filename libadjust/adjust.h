@@ -7,6 +7,10 @@
 
 int			 libadjust_connect(void) __attribute__((warn_unused_result));
 int			 libadjust_serve(void) __attribute__((warn_unused_result));
+
+int			 libadjust_send_file(char *filename);
+int			 libadjust_recv_file(char *filename);
+
 void			 libadjust_terminate(void);
 
 struct file_info;

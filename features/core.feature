@@ -7,7 +7,7 @@ Feature: File adjustement
     And the file "target" sould be 42 B long
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
-    And the client should have sent 42 B
+    And the client should have sent 78 B
     And the client should have received 1 B
 
   Scenario: Adjust different destination file
@@ -19,7 +19,7 @@ Feature: File adjustement
     And the file "target" sould be 42 B long
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
-    And the client should have sent 75 B
+    And the client should have sent 111 B
     And the client should have received 34 B
 
   Scenario: Adjust larger destination file
@@ -30,7 +30,7 @@ Feature: File adjustement
     And the file "target" sould be 42 B long
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
-    And the client should have sent 75 B
+    And the client should have sent 111 B
     And the client should have received 34 B
 
   Scenario: Transfer only changed chunks
@@ -40,5 +40,5 @@ Feature: File adjustement
     Then "source" and "target" should have the same size
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
-    And the client should have sent 8288 B
+    And the client should have sent 8330 B
     And the client should have received 131076 B
