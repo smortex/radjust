@@ -64,7 +64,6 @@ xfer_file(const char *filename)
     if (file_close(info) < 0)
 	return -1;
 
-    file_info_free(info);
     close(sock);
 
     int byte_send, byte_recv;
@@ -72,6 +71,8 @@ xfer_file(const char *filename)
     get_xfer_stats(&byte_send, &byte_recv);
     printf("client: synchronized %ld bytes\n", info->size);
     printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
+
+    file_info_free(info);
 
     return 0;
 }
