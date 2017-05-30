@@ -15,7 +15,10 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-int		 send_file(const char *filename);
+int		 xfer_file(const char *filename);
+int		 send_file(const int fd, struct file_info *file);
+
+int		 file_send_content(const int fd, struct file_info *file);
 
 int		 send_changed_chunks(const int fd, struct file_info *file);
 int		 send_whole_file_content(const int fd, struct file_info *file);
@@ -28,13 +31,13 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    send_file(argv[1]);
+    xfer_file(argv[1]);
 
     exit(EXIT_SUCCESS);
 }
 
 int
-send_file(const char *filename)
+xfer_file(const char *filename)
 {
     struct file_info *info;
     if (!(info = file_info_new(filename)))
@@ -59,24 +62,11 @@ send_file(const char *filename)
 
     send(sock, buffer, strlen(buffer), 0);
 
-    recv(sock, buffer, 1, 0);
-    switch (buffer[0]) {
-    case ADJUST_FILE_UPTODATE:
-	break;
-    case ADJUST_FILE_MISMATCH: {
-	info->transfer_mode = TM_CHANGED_CHUNKS;
-	if (send_changed_chunks(sock, info) < 0)
-	    err(EXIT_FAILURE, "send_changed_chunks");
+    send_file(sock, info);
 
-    }
-    break;
-    case ADJUST_FILE_MISSING: {
-	info->transfer_mode = TM_WHOLE_FILE;
-	if (send_whole_file_content(sock, info) < 0)
-	    err(EXIT_FAILURE, "send_whole_file_content");
-	break;
-    }
-    }
+    file_close(info);
+    file_info_free(info);
+    close(sock);
 
     int byte_send, byte_recv;
 
@@ -84,11 +74,48 @@ send_file(const char *filename)
     printf("client: synchronized %ld bytes\n", info->size);
     printf("client: sent %d bytes, received %d bytes\n", byte_send, byte_recv);
 
-    file_close(info);
-    file_info_free(info);
-    close(sock);
+    return 0;
+}
+
+int
+send_file(const int fd, struct file_info *file)
+{
+    char buffer;
+    recv(fd, &buffer, 1, 0);
+    switch (buffer) {
+    case ADJUST_FILE_UPTODATE:
+	break;
+    case ADJUST_FILE_MISMATCH: {
+	file->transfer_mode = TM_CHANGED_CHUNKS;
+	if (send_changed_chunks(fd, file) < 0)
+	    err(EXIT_FAILURE, "send_changed_chunks");
+
+    }
+    break;
+    case ADJUST_FILE_MISSING: {
+	file->transfer_mode = TM_WHOLE_FILE;
+	if (send_whole_file_content(fd, file) < 0)
+	    err(EXIT_FAILURE, "send_whole_file_content");
+	break;
+    }
+    }
 
     return 0;
+}
+
+int
+file_send_content(const int fd, struct file_info *file)
+{
+    switch (file->transfer_mode) {
+    case TM_CHANGED_CHUNKS:
+	return send_changed_chunks(fd, file);
+	break;
+    case TM_WHOLE_FILE:
+	return send_whole_file_content(fd, file);
+	break;
+    }
+
+    return -1; /* NOTREACHED */
 }
 
 int
