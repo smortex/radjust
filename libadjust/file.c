@@ -17,7 +17,7 @@ static int		 map_current_block(struct file_info *file);
 static int		 unmap_current_block(struct file_info *file);
 
 void
-sha256(void *data, size_t length, unsigned char digest[32])
+sha256(const void *data, const size_t length, unsigned char digest[32])
 {
     SHA256_CTX sha256;
 

@@ -23,10 +23,10 @@ struct file_info {
 int		 file_open(struct file_info *file, int mode);
 int		 file_close(struct file_info *file);
 
-void		 sha256(void *data, size_t length, unsigned char digest[32]);
+void		 sha256(const void *data, const size_t length, unsigned char digest[32]);
 
-void		 send_changed_block_chunks(int fd, struct file_info *file);
-void		 recv_changed_block_chunks(int fd, struct file_info *file);
+void		 send_changed_block_chunks(const int fd, const struct file_info *file);
+void		 recv_changed_block_chunks(const int fd, const struct file_info *file);
 
 int		 file_map_first_block(struct file_info *file);
 int		 file_map_next_block(struct file_info *file);
