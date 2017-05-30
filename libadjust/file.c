@@ -65,6 +65,7 @@ libadjust_recv_file(char *filename)
 	if (recv_data(sock, p, 1) != 1)
 	    return -1;
     }
+    *p = '\0';
 
     char remote_filename[BUFSIZ];
 

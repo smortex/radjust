@@ -23,6 +23,7 @@ libadjust_connect(void)
 	return -1;
 
     struct sockaddr_un address;
+    bzero(&address, sizeof(address));
 
     address.sun_family = PF_UNIX;
     strcpy(address.sun_path, "socket");
@@ -40,6 +41,8 @@ libadjust_serve(void)
 	return -1;
 
     struct sockaddr_un server_address;
+    bzero(&server_address, sizeof(server_address));
+
     server_address.sun_family = PF_UNIX;
     strcpy(server_address.sun_path, "socket");
 
