@@ -118,29 +118,32 @@ file_set_mtime(const struct file_info *file, const struct timespec mtime)
 int
 file_send_content(const int fd, struct file_info *file)
 {
+    int res;
+
     switch (file->transfer_mode) {
     case TM_ADJUST:
-	return send_file_adjustments(fd, file);
+	res = send_file_adjustments(fd, file);
 	break;
     case TM_WHOLE_FILE:
-	return send_whole_file_content(fd, file);
+	res = send_whole_file_content(fd, file);
 	break;
     }
 
-    return -1; /* NOTREACHED */
+    return res;
 }
 
 int
 file_recv_content(const int fd, struct file_info *file)
 {
+    int res;
     switch (file->transfer_mode) {
     case TM_ADJUST:
-	return recv_file_adjustments(fd, file);
+	res = recv_file_adjustments(fd, file);
 	break;
     case TM_WHOLE_FILE:
-	return recv_whole_file_content(fd, file);
+	res = recv_whole_file_content(fd, file);
 	break;
     }
 
-    return -1; /* NOTREACHED */
+    return res;
 }
