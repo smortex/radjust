@@ -17,6 +17,9 @@
 
 int		 send_file(const char *filename);
 
+int		 send_changed_chunks(const int fd, struct file_info *file);
+int		 send_whole_file_content(const int fd, struct file_info *file);
+
 int
 main(int argc, char *argv[])
 {
@@ -61,44 +64,18 @@ send_file(const char *filename)
     case ADJUST_FILE_UPTODATE:
 	break;
     case ADJUST_FILE_MISMATCH: {
-	if (file_map_first_block(info) < 0)
-	    err(EXIT_FAILURE, "file_map_first_block");
+	info->transfer_mode = TM_DELTA;
+	if (send_changed_chunks(sock, info) < 0)
+	    err(EXIT_FAILURE, "send_changed_chunks");
 
-	send_changed_block_chunks(sock, info);
-
-	bool finished = false;
-	while (!finished) {
-	    switch (file_map_next_block(info)) {
-	    case -1:
-		err(EXIT_FAILURE, "file_map_next_block");
-		break;
-	    case 0:
-		finished = true;
-		break;
-	    case 1:
-		send_changed_block_chunks(sock, info);
-		break;
-	    }
-	}
     }
     break;
     case ADJUST_FILE_MISSING: {
-	off_t data_sent = 0;
-	int fd = open(filename, O_RDONLY);
-
-	while (data_sent < info->size) {
-
-	    int res = read(fd, buffer, MIN((off_t)sizeof(buffer), info->size - data_sent));
-
-	    if (send(sock, buffer, res, 0) != res)
-		err(EXIT_FAILURE, "send");
-	    data_sent += res;
-	}
-
-	close(fd);
+	info->transfer_mode = TM_WHOLE_FILE;
+	if (send_whole_file_content(sock, info) < 0)
+	    err(EXIT_FAILURE, "send_whole_file_content");
+	break;
     }
-
-    break;
     }
 
     int byte_send, byte_recv;
@@ -110,6 +87,51 @@ send_file(const char *filename)
     file_close(info);
     file_info_free(info);
     close(sock);
+
+    return 0;
+}
+
+int
+send_changed_chunks(const int fd, struct file_info *file)
+{
+    if (file_map_first_block(file) < 0)
+	err(EXIT_FAILURE, "file_map_first_block");
+
+    send_changed_block_chunks(fd, file);
+
+    bool finished = false;
+    while (!finished) {
+	switch (file_map_next_block(file)) {
+	case -1:
+	    return -1;
+	    break;
+	case 0:
+	    finished = true;
+	    break;
+	case 1:
+	    send_changed_block_chunks(fd, file);
+	    break;
+	}
+    }
+
+    return 0;
+}
+
+int
+send_whole_file_content(const int fd, struct file_info *file)
+{
+    off_t data_sent = 0;
+
+    char buffer[BUFSIZ];
+
+    while (data_sent < file->size) {
+
+	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
+
+	if (send(fd, buffer, res, 0) != res)
+	    err(EXIT_FAILURE, "send");
+	data_sent += res;
+    }
 
     return 0;
 }
