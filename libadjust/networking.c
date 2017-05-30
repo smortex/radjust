@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include <sys/param.h>
 #include <sys/types.h>
@@ -14,6 +15,41 @@ static void		 send_data(int fd, void *data, size_t length);
 
 static int byte_send = 0;
 static int byte_recv = 0;
+
+int
+send_whole_file_content(const int fd, struct file_info *file)
+{
+    off_t data_sent = 0;
+
+    char buffer[4 * 1024];
+
+    while (data_sent < file->size) {
+
+	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
+
+	send_data(fd, buffer, res);
+	data_sent += res;
+    }
+
+    return 0;
+}
+
+int
+recv_whole_file_content(const int fd, struct file_info *file)
+{
+    char buffer[4 * 1024];
+    int total = 0;
+
+    while (total < file->size) {
+	int n = recv(fd, buffer, sizeof(buffer), 0);
+	if (write(file->fd, buffer, n) != n)
+	    return -1;
+
+	total += n;
+    }
+
+    return 0;
+}
 
 int
 send_file_adjustments(const int fd, struct file_info *file)

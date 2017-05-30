@@ -20,8 +20,6 @@ int		 send_file(const int fd, struct file_info *file) __attribute__((warn_unused
 
 int		 file_send_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int		 send_whole_file_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
-
 int
 main(int argc, char *argv[])
 {
@@ -113,23 +111,4 @@ file_send_content(const int fd, struct file_info *file)
     }
 
     return -1; /* NOTREACHED */
-}
-
-int
-send_whole_file_content(const int fd, struct file_info *file)
-{
-    off_t data_sent = 0;
-
-    char buffer[BUFSIZ];
-
-    while (data_sent < file->size) {
-
-	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
-
-	if (send(fd, buffer, res, 0) != res)
-	    return -1;
-	data_sent += res;
-    }
-
-    return 0;
 }

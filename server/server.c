@@ -20,8 +20,6 @@ int	 adjust_file(const int fd, struct file_info *local_info, const struct file_i
 
 int	 file_recv_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-int	 recv_whole_file_content(const int fd, struct file_info *file) __attribute__((warn_unused_result));
-
 int
 main(int argc, char *argv[])
 {
@@ -148,21 +146,4 @@ file_recv_content(const int fd, struct file_info *file)
     }
 
     return -1; /* NOTREACHED */
-}
-
-int
-recv_whole_file_content(const int fd, struct file_info *file)
-{
-    char buffer[BUFSIZ];
-    int total = 0;
-
-    while (total < file->size) {
-	int n = recv(fd, buffer, sizeof(buffer), 0);
-	if (write(file->fd, buffer, n) != n)
-	    err(EXIT_FAILURE, "write");
-
-	total += n;
-    }
-
-    return 0;
 }
