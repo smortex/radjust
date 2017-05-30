@@ -11,7 +11,7 @@ struct file_info {
     off_t size;
     struct timespec mtime;
 
-    enum {TM_WHOLE_FILE, TM_DELTA} transfer_mode;
+    enum {TM_WHOLE_FILE, TM_CHANGED_CHUNKS} transfer_mode;
 
     int fd;
     off_t offset;

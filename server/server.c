@@ -88,7 +88,7 @@ receive_file(const int fd, const char *filename, const struct file_info *remote_
 	    return;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
-	    local_info->transfer_mode = TM_DELTA;
+	    local_info->transfer_mode = TM_CHANGED_CHUNKS;
 	    warnx("need adjusting");
 	}
     } else {
@@ -129,7 +129,7 @@ int
 file_recv_content(const int fd, struct file_info *file)
 {
     switch (file->transfer_mode) {
-    case TM_DELTA:
+    case TM_CHANGED_CHUNKS:
 	return recv_changed_chunks(fd, file);
 	break;
     case TM_WHOLE_FILE:

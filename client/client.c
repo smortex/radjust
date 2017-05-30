@@ -64,7 +64,7 @@ send_file(const char *filename)
     case ADJUST_FILE_UPTODATE:
 	break;
     case ADJUST_FILE_MISMATCH: {
-	info->transfer_mode = TM_DELTA;
+	info->transfer_mode = TM_CHANGED_CHUNKS;
 	if (send_changed_chunks(sock, info) < 0)
 	    err(EXIT_FAILURE, "send_changed_chunks");
 
