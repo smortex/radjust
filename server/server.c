@@ -20,7 +20,7 @@ void	 adjust_file(const int fd, struct file_info *local_info, const struct file_
 
 int	 file_recv_content(const int fd, struct file_info *file);
 
-int	 recv_changed_chunks(const int fd, struct file_info *file);
+int	 recv_file_adjustments(const int fd, struct file_info *file);
 int	 recv_whole_file_content(const int fd, struct file_info *file);
 
 int
@@ -88,7 +88,7 @@ receive_file(const int fd, const char *filename, const struct file_info *remote_
 	    return;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
-	    local_info->transfer_mode = TM_CHANGED_CHUNKS;
+	    local_info->transfer_mode = TM_ADJUST;
 	    warnx("need adjusting");
 	}
     } else {
@@ -129,8 +129,8 @@ int
 file_recv_content(const int fd, struct file_info *file)
 {
     switch (file->transfer_mode) {
-    case TM_CHANGED_CHUNKS:
-	return recv_changed_chunks(fd, file);
+    case TM_ADJUST:
+	return recv_file_adjustments(fd, file);
 	break;
     case TM_WHOLE_FILE:
 	return recv_whole_file_content(fd, file);
@@ -141,12 +141,12 @@ file_recv_content(const int fd, struct file_info *file)
 }
 
 int
-recv_changed_chunks(const int fd, struct file_info *file)
+recv_file_adjustments(const int fd, struct file_info *file)
 {
     if (file_map_first_block(file) < 0)
 	return -1;
 
-    recv_changed_block_chunks(fd, file);
+    recv_block_adjustments(fd, file);
 
     bool finished = false;
     while (!finished) {
@@ -158,7 +158,7 @@ recv_changed_chunks(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    recv_changed_block_chunks(fd, file);
+	    recv_block_adjustments(fd, file);
 	    break;
 	}
     }

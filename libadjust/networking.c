@@ -15,7 +15,7 @@ static int byte_send = 0;
 static int byte_recv = 0;
 
 void
-send_changed_block_chunks(const int fd, const struct file_info *file)
+send_block_adjustments(const int fd, const struct file_info *file)
 {
     unsigned char local_sha256[32];
     sha256(file->data, file->data_size, local_sha256);
@@ -42,7 +42,7 @@ send_changed_block_chunks(const int fd, const struct file_info *file)
 }
 
 void
-recv_changed_block_chunks(const int fd, const struct file_info *file)
+recv_block_adjustments(const int fd, const struct file_info *file)
 {
     unsigned char local_sha256[32];
     sha256(file->data, file->data_size, local_sha256);

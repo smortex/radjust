@@ -11,7 +11,7 @@ struct file_info {
     off_t size;
     struct timespec mtime;
 
-    enum {TM_WHOLE_FILE, TM_CHANGED_CHUNKS} transfer_mode;
+    enum {TM_WHOLE_FILE, TM_ADJUST} transfer_mode;
 
     int fd;
     off_t offset;
@@ -25,8 +25,8 @@ int		 file_close(struct file_info *file);
 
 void		 sha256(const void *data, const size_t length, unsigned char digest[32]);
 
-void		 send_changed_block_chunks(const int fd, const struct file_info *file);
-void		 recv_changed_block_chunks(const int fd, const struct file_info *file);
+void		 send_block_adjustments(const int fd, const struct file_info *file);
+void		 recv_block_adjustments(const int fd, const struct file_info *file);
 
 int		 file_map_first_block(struct file_info *file);
 int		 file_map_next_block(struct file_info *file);

@@ -20,7 +20,7 @@ int		 send_file(const int fd, struct file_info *file);
 
 int		 file_send_content(const int fd, struct file_info *file);
 
-int		 send_changed_chunks(const int fd, struct file_info *file);
+int		 send_file_adjustments(const int fd, struct file_info *file);
 int		 send_whole_file_content(const int fd, struct file_info *file);
 
 int
@@ -85,20 +85,15 @@ send_file(const int fd, struct file_info *file)
     switch (buffer) {
     case ADJUST_FILE_UPTODATE:
 	break;
-    case ADJUST_FILE_MISMATCH: {
-	file->transfer_mode = TM_CHANGED_CHUNKS;
-	if (send_changed_chunks(fd, file) < 0)
-	    err(EXIT_FAILURE, "send_changed_chunks");
-
-    }
-    break;
-    case ADJUST_FILE_MISSING: {
+    case ADJUST_FILE_MISMATCH:
+	file->transfer_mode = TM_ADJUST;
+	break;
+    case ADJUST_FILE_MISSING:
 	file->transfer_mode = TM_WHOLE_FILE;
-	if (send_whole_file_content(fd, file) < 0)
-	    err(EXIT_FAILURE, "send_whole_file_content");
 	break;
     }
-    }
+
+    file_send_content(fd, file);
 
     return 0;
 }
@@ -107,8 +102,8 @@ int
 file_send_content(const int fd, struct file_info *file)
 {
     switch (file->transfer_mode) {
-    case TM_CHANGED_CHUNKS:
-	return send_changed_chunks(fd, file);
+    case TM_ADJUST:
+	return send_file_adjustments(fd, file);
 	break;
     case TM_WHOLE_FILE:
 	return send_whole_file_content(fd, file);
@@ -119,12 +114,12 @@ file_send_content(const int fd, struct file_info *file)
 }
 
 int
-send_changed_chunks(const int fd, struct file_info *file)
+send_file_adjustments(const int fd, struct file_info *file)
 {
     if (file_map_first_block(file) < 0)
 	err(EXIT_FAILURE, "file_map_first_block");
 
-    send_changed_block_chunks(fd, file);
+    send_block_adjustments(fd, file);
 
     bool finished = false;
     while (!finished) {
@@ -136,7 +131,7 @@ send_changed_chunks(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    send_changed_block_chunks(fd, file);
+	    send_block_adjustments(fd, file);
 	    break;
 	}
     }
