@@ -24,7 +24,9 @@ send_whole_file_content(const int fd, struct file_info *file)
 
 	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
 
-	send_data(fd, buffer, res);
+	if (send_data(fd, buffer, res) != res)
+	    return -1;
+
 	data_sent += res;
     }
 
@@ -54,7 +56,8 @@ send_file_adjustments(const int fd, struct file_info *file)
     if (file_map_first_block(file) < 0)
 	return -1;
 
-    send_block_adjustments(fd, file);
+    if (send_block_adjustments(fd, file) < 0)
+	return -1;
 
     bool finished = false;
     while (!finished) {
@@ -66,7 +69,8 @@ send_file_adjustments(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    send_block_adjustments(fd, file);
+	    if (send_block_adjustments(fd, file) < 0)
+		return -1;
 	    break;
 	}
     }
@@ -80,7 +84,8 @@ recv_file_adjustments(const int fd, struct file_info *file)
     if (file_map_first_block(file) < 0)
 	return -1;
 
-    recv_block_adjustments(fd, file);
+    if (recv_block_adjustments(fd, file) < 0)
+	return -1;
 
     bool finished = false;
     while (!finished) {
@@ -92,7 +97,8 @@ recv_file_adjustments(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    recv_block_adjustments(fd, file);
+	    if (recv_block_adjustments(fd, file) < 0)
+		return -1;
 	    break;
 	}
     }
@@ -100,73 +106,94 @@ recv_file_adjustments(const int fd, struct file_info *file)
     return 0;
 }
 
-void
+int
 send_block_adjustments(const int fd, const struct file_info *file)
 {
     unsigned char local_sha256[32];
     sha256(file->data, file->data_size, local_sha256);
 
-    send_data(fd, local_sha256, 32);
+    if (send_data(fd, local_sha256, 32) != 32)
+	return -1;
 
     char buffer;
-    recv_data(fd, &buffer, 1);
+    if (recv_data(fd, &buffer, 1) != 1)
+	return -1;
+
     if (buffer != 0) {
 	unsigned char remote_sha256[32];
 	for (uint32_t i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
 	    int this_block_size = MIN(SMALL_BLOCK_SIZE, file->size - file->offset + i * SMALL_BLOCK_SIZE);
-	    recv_data(fd, remote_sha256, 32);
+	    if (recv_data(fd, remote_sha256, 32) != 32)
+		return -1;
 	    sha256(file->data + i * SMALL_BLOCK_SIZE, this_block_size, local_sha256);
 
 	    if (memcmp(local_sha256, remote_sha256, 32) == 0) {
-		send_data(fd, "\0", 1);
+		if (send_data(fd, "\0", 1) != 1)
+		    return -1;
 	    } else {
-		send_data(fd, "\1", 1);
-		send_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size);
+		if (send_data(fd, "\1", 1) != 1)
+		    return -1;
+
+		if (send_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size) != this_block_size)
+		    return -1;
 	    }
 	}
     }
+
+    return 0;
 }
 
-void
+int
 recv_block_adjustments(const int fd, const struct file_info *file)
 {
     unsigned char local_sha256[32];
     sha256(file->data, file->data_size, local_sha256);
 
     unsigned char remote_sha256[32];
-    recv_data(fd, remote_sha256, 32);
+    if (recv_data(fd, remote_sha256, 32) != 32)
+	return -1;
 
     if (memcmp(local_sha256, remote_sha256, 32) == 0) {
-	send_data(fd, "\0", 1);
+	if (send_data(fd, "\0", 1) != 1)
+	    return -1;
     } else {
-	send_data(fd, "\1", 1);
+	if (send_data(fd, "\1", 1) != 1)
+	    return -1;
 
 	for (uint32_t i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
 	    int this_block_size = MIN(SMALL_BLOCK_SIZE, file->size - file->offset + i * SMALL_BLOCK_SIZE);
 	    sha256(file->data + i * SMALL_BLOCK_SIZE, this_block_size, local_sha256);
-	    send_data(fd, local_sha256, 32);
+	    if (send_data(fd, local_sha256, 32) != 32)
+		return -1;
 
 	    char buffer;
-	    recv_data(fd, &buffer, 1);
+	    if (recv_data(fd, &buffer, 1) != 1)
+		return -1;
+
 	    if (buffer == 1) {
-		recv_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size);
+		if (recv_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size) != this_block_size)
+		    return -1;
 	    }
 	}
     }
+
+    return 0;
 }
 
-void
+int
 send_data(int fd, void *data, size_t length)
 {
-    send(fd, data, length, 0);
-    byte_send += length;
+    int res = send(fd, data, length, 0);
+    byte_send += res;
+    return res;
 }
 
-void
+int
 recv_data(int fd, void *data, size_t length)
 {
-    recv(fd, data, length, 0);
-    byte_recv += length;
+    int res = recv(fd, data, length, 0);
+    byte_recv += res;
+    return res;
 }
 
 void

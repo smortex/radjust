@@ -119,7 +119,9 @@ int
 file_send(const int fd, struct file_info *file)
 {
     char buffer;
-    recv_data(fd, &buffer, 1);
+    if (recv_data(fd, &buffer, 1) < 0)
+	return -1;
+
     switch (buffer) {
     case ADJUST_FILE_UPTODATE:
 	break;

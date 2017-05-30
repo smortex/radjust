@@ -20,8 +20,8 @@ struct file_info {
     int mmap_mode;
 };
 
-void		 recv_data(int fd, void *data, size_t length);
-void		 send_data(int fd, void *data, size_t length);
+int		 recv_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
+int		 send_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 
 int		 file_open(struct file_info *file, int mode) __attribute__((warn_unused_result));
 int		 file_close(struct file_info *file) __attribute__((warn_unused_result));
@@ -34,8 +34,8 @@ int		 recv_whole_file_content(const int fd, struct file_info *file) __attribute_
 int		 send_file_adjustments(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 int		 recv_file_adjustments(const int fd, struct file_info *file) __attribute__((warn_unused_result));
 
-void		 send_block_adjustments(const int fd, const struct file_info *file);
-void		 recv_block_adjustments(const int fd, const struct file_info *file);
+int		 send_block_adjustments(const int fd, const struct file_info *file) __attribute__((warn_unused_result));
+int		 recv_block_adjustments(const int fd, const struct file_info *file) __attribute__((warn_unused_result));
 
 int		 file_map_first_block(struct file_info *file) __attribute__((warn_unused_result));
 int		 file_map_next_block(struct file_info *file) __attribute__((warn_unused_result));
