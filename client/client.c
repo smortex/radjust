@@ -7,16 +7,19 @@
 int
 main(int argc, char *argv[])
 {
-    if (argc != 2) {
-	fprintf(stderr, "usage: %s filename\n", argv[0]);
+    if (argc != 3) {
+	fprintf(stderr, "usage: %s port filename\n", argv[0]);
 	exit(EXIT_FAILURE);
     }
 
-    if (libadjust_socket_open_out() < 0)
+    int port;
+    sscanf(argv[1], "%d", &port);
+
+    if (libadjust_socket_open_out(port) < 0)
 	err(EXIT_FAILURE, "libadjust_socket_open_out");
 
-    if (libadjust_send_file(argv[1]) < 0)
-	err(EXIT_FAILURE, "xfer_file");
+    if (libadjust_send_file(argv[2]) < 0)
+	err(EXIT_FAILURE, "libadjust_send_file");
 
     libadjust_socket_close();
 

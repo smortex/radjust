@@ -1,14 +1,12 @@
 require 'open3'
 
 When(/^I synchronize "([^"]*)" \-> "([^"]*)"$/) do |source, destination|
-  File.unlink('socket') if File.exist?('socket')
-
   server_stdin, server_stdout, server_stderr, server_thr = Open3.popen3("./server/server #{tmp_file_name(destination)}")
   server_stdin.close
 
-  sleep 0.001 until File.exist?('socket')
+  port = server_stdout.readline.to_i
 
-  client_stdin, client_stdout, client_stderr, client_thr = Open3.popen3("./client/client #{tmp_file_name(source)}")
+  client_stdin, client_stdout, client_stderr, client_thr = Open3.popen3("./client/client #{port} #{tmp_file_name(source)}")
   client_stdin.close
 
   exit_status = server_thr.value

@@ -12,8 +12,15 @@ main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
 
-    if (libadjust_socket_open_in() < 0)
+    int port = libadjust_socket_open_in();
+    if (port < 0)
 	err(EXIT_FAILURE, "libadjust_socket_open_in");
+
+    fprintf(stdout, "%d\n", port);
+    fflush(stdout);
+
+    if (libadjust_socket_open_in_accept() < 0)
+	return -1;
 
     if (libadjust_recv_file(argv[1]) < 0)
 	err(EXIT_FAILURE, "libadjust_recv_file");

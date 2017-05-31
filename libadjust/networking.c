@@ -6,7 +6,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
+#include <netinet/in.h>
 
 #include "adjust.h"
 #include "adjust_internal.h"
@@ -16,19 +16,18 @@ static size_t byte_recv = 0;
 
 int sock;
 
-static char *socket_name = "socket";
-
 int
-libadjust_socket_open_out(void)
+libadjust_socket_open_out(const int port)
 {
-    if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
+    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 	return -1;
 
-    struct sockaddr_un address;
+    struct sockaddr_in address;
     bzero(&address, sizeof(address));
 
-    address.sun_family = PF_UNIX;
-    strcpy(address.sun_path, socket_name);
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     if (connect(sock, (struct sockaddr *)&address, sizeof(address)) < 0)
 	return -1;
@@ -39,14 +38,15 @@ libadjust_socket_open_out(void)
 int
 libadjust_socket_open_in(void)
 {
-    if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
+    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 	return -1;
 
-    struct sockaddr_un server_address;
+    struct sockaddr_in server_address;
     bzero(&server_address, sizeof(server_address));
 
-    server_address.sun_family = PF_UNIX;
-    strcpy(server_address.sun_path, socket_name);
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = 0;
+    server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     if (bind(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
 	return -1;
@@ -54,7 +54,17 @@ libadjust_socket_open_in(void)
     if (listen(sock, 1) < 0)
 	return -1;
 
-    struct sockaddr_un client_address;
+    socklen_t n = sizeof(server_address);
+    if (getsockname(sock, (struct sockaddr *) &server_address, &n) < 0)
+	return -1;
+
+    return ntohs(server_address.sin_port);
+}
+
+int
+libadjust_socket_open_in_accept(void)
+{
+    struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
     int client_sock = accept(sock, (struct sockaddr *)&client_address, &client_len);
 
@@ -67,7 +77,6 @@ libadjust_socket_open_in(void)
 void
 libadjust_socket_close(void)
 {
-    unlink(socket_name);
     close(sock);
 }
 
