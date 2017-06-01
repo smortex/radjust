@@ -103,15 +103,21 @@ send_whole_file_content(const int fd, struct file_info *file)
 int
 recv_whole_file_content(const int fd, struct file_info *file)
 {
-    char buffer[4 * 1024];
-    int total = 0;
+    int data_recv = 0;
 
-    while (total < file->size) {
-	int n = recv_data(fd, buffer, sizeof(buffer));
-	if (write(file->fd, buffer, n) != n)
+    char buffer[4 * 1024];
+
+    while (data_recv < file->size) {
+	int expect = MIN((off_t)sizeof(buffer), file->size - data_recv);
+	int res;
+
+	if ((res = recv_data(fd, buffer, expect)) != expect)
 	    return -1;
 
-	total += n;
+	if (write(file->fd, buffer, res) != res)
+	    return -1;
+
+	data_recv += res;
     }
 
     return 0;
