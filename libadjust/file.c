@@ -270,7 +270,7 @@ file_recv(const int fd, struct file_info *local, const struct file_info *remote)
 int
 file_send_content(const int fd, struct file_info *file)
 {
-    int res;
+    int res = -1;
 
     switch (file->transfer_mode) {
     case TM_ADJUST:
@@ -287,7 +287,8 @@ file_send_content(const int fd, struct file_info *file)
 int
 file_recv_content(const int fd, struct file_info *file)
 {
-    int res;
+    int res = -1;
+
     switch (file->transfer_mode) {
     case TM_ADJUST:
 	res = recv_file_adjustments(fd, file);
