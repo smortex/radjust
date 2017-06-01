@@ -9,6 +9,37 @@ Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
   end
 end
 
+Given(/^"([^"]*)" and "([^"]*)" have different mtime$/) do |left, right|
+  left_filename  = tmp_file_name(left)
+  right_filename = tmp_file_name(right)
+
+  left_stat  = File.stat(left_filename)
+  right_stat = File.stat(right_filename)
+
+  if left_stat.mtime == right_stat.mtime
+    puts <<EOT
+__      ___                                _                  _   _
+\\ \\    / (_)_ _      __ _     _ __  ___ __| |_ __ __ _ _ _ __| | | |
+ \\ \\/\\/ /| | ' \\    / _` |   | '_ \\/ _ (_-<  _/ _/ _` | '_/ _` | |_|
+  \\_/\\_/ |_|_||_|   \\__,_|   | .__/\\___/__/\\__\\__\\__,_|_| \\__,_| (_)
+                             |_|
+
+The files "#{left}" and "#{right}" are supposed to have a different
+moditication time.
+
+For some undetermined reasons, at least on Linux, these files happen
+to have the same mtime, leading radjust to consider the files as
+identical, and making the regression test suite fail.
+
+Because this condition was just met, I will fix it before going
+further.  However, this hackish workaround makes me feel really sad,
+so if you can help fixing this issue, I will be pleased to send you
+a nice postcard by snail mail!
+EOT
+    File.utime(left_stat.atime, left_stat.mtime - 1, left_filename)
+  end
+end
+
 Given(/^a file "([^"]*)" does not exist$/) do |name|
   filename = tmp_file_name(name)
 

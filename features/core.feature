@@ -13,6 +13,7 @@ Feature: File adjustement
   Scenario: Adjust different destination file
     Given a random file "source" exists and is 42 B
     And a random file "target" exists and is 42 B
+    And "source" and "target" have different mtime
     When I synchronize "source" -> "target"
     Then the file "target" should exist
     And the file "target" sould be 42 B long
@@ -24,6 +25,7 @@ Feature: File adjustement
   Scenario: Adjust larger destination file
     Given a random file "source" exists and is 42 B
     And a random file "target" exists and is 4 KB
+    And "source" and "target" have different mtime
     When I synchronize "source" -> "target"
     Then the file "target" should exist
     And the file "target" sould be 42 B long
@@ -35,6 +37,7 @@ Feature: File adjustement
   Scenario: Transfer only changed chunks
     Given a random file "source" exists and is 42 MB
     And "target" is a copy of "source" with 1 byte changed
+    And "source" and "target" have different mtime
     When I synchronize "source" -> "target"
     Then "source" and "target" should have the same size
     And "source" and "target" should have the same mtime
