@@ -258,7 +258,7 @@ send_data(int fd, void *data, size_t length)
 int
 recv_data(int fd, void *data, size_t length)
 {
-    int res = recv(fd, data, length, 0);
+    int res = recv(fd, data, length, MSG_WAITALL);
     byte_recv += res;
     return res;
 }
