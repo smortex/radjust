@@ -197,7 +197,7 @@ send_block_adjustments(const int fd, const struct file_info *file)
 
     if (buffer != 0) {
 	unsigned char remote_sha256[32];
-	for (uint32_t i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
+	for (int i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
 	    int this_block_size = MIN(SMALL_BLOCK_SIZE, file->size - file->offset + i * SMALL_BLOCK_SIZE);
 	    if (recv_data(fd, remote_sha256, 32) != 32)
 		FAILX(-1, "recv_data");
@@ -236,7 +236,7 @@ recv_block_adjustments(const int fd, const struct file_info *file)
 	if (send_data(fd, "\1", 1) != 1)
 	    FAILX(-1, "send_data");
 
-	for (uint32_t i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
+	for (int i = 0; i < (LARGE_BLOCK_SIZE / SMALL_BLOCK_SIZE) && file->offset + i * SMALL_BLOCK_SIZE < file->size; i++) {
 	    int this_block_size = MIN(SMALL_BLOCK_SIZE, file->size - file->offset + i * SMALL_BLOCK_SIZE);
 	    sha256(file->data + i * SMALL_BLOCK_SIZE, this_block_size, local_sha256);
 	    if (send_data(fd, local_sha256, 32) != 32)
