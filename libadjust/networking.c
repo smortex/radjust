@@ -107,7 +107,7 @@ recv_whole_file_content(const int fd, struct file_info *file)
     int total = 0;
 
     while (total < file->size) {
-	int n = recv(fd, buffer, sizeof(buffer), 0);
+	int n = recv_data(fd, buffer, sizeof(buffer));
 	if (write(file->fd, buffer, n) != n)
 	    return -1;
 
