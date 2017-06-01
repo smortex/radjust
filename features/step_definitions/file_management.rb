@@ -103,3 +103,11 @@ end
 Then(/^the client should have received (#{FILESIZE})$/) do |n|
   expect(@client_stdout).to match(/received #{n} bytes/)
 end
+
+Then(/^the server should have sent (#{FILESIZE})$/) do |n|
+  expect(@server_stdout).to match(/sent #{n} bytes/)
+end
+
+Then(/^the server should have received (#{FILESIZE})$/) do |n|
+  expect(@server_stdout).to match(/received #{n} bytes/)
+end

@@ -9,6 +9,8 @@ Feature: File adjustement
     And "source" and "target" should have the same content
     And the client should have sent 78 B
     And the client should have received 1 B
+    And the server should have sent 1 B
+    And the server should have received 78 B
 
   Scenario: Adjust different destination file
     Given a random file "source" exists and is 42 B
@@ -21,6 +23,8 @@ Feature: File adjustement
     And "source" and "target" should have the same content
     And the client should have sent 111 B
     And the client should have received 34 B
+    And the server should have sent 34 B
+    And the server should have received 111 B
 
   Scenario: Adjust larger destination file
     Given a random file "source" exists and is 42 B
@@ -33,6 +37,8 @@ Feature: File adjustement
     And "source" and "target" should have the same content
     And the client should have sent 111 B
     And the client should have received 34 B
+    And the server should have sent 34 B
+    And the server should have received 111 B
 
   Scenario: Transfer only changed chunks
     Given a random file "source" exists and is 42 MB
@@ -44,3 +50,5 @@ Feature: File adjustement
     And "source" and "target" should have the same content
     And the client should have sent 8330 B
     And the client should have received 131076 B
+    And the server should have sent 131076 B
+    And the server should have received 8330 B
