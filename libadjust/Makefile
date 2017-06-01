@@ -1,5 +1,6 @@
 LIB=	adjust
-SRCS=	file.c \
+SRCS=	error.c \
+	file.c \
 	file_info.c \
 	networking.c
 

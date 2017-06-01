@@ -28,22 +28,22 @@ libadjust_send_file(char *filename)
 {
     struct file_info *info;
     if (!(info = file_info_new(filename)))
-	return -1;
+	FAILX(-1, "file_info_new");
 
     if (file_open(info, O_RDONLY) < 0)
-	return -1;
+	FAILX(-1, "file_open");
 
     char buffer[BUFSIZ];
     sprintf(buffer, "%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
 
     if (send_data(sock, buffer, strlen(buffer)) != (int) strlen(buffer))
-	return -1;
+	FAILX(-1, "send_data");
 
     if (file_send(sock, info) < 0)
-	return -1;
+	FAILX(-1, "file_send");
 
     if (file_close(info) < 0)
-	return -1;
+	FAILX(-1, "file_close");
 
     synchronized += info->size;
     file_info_free(info);
@@ -58,12 +58,12 @@ libadjust_recv_file(char *filename)
     char *p = buffer;
 
     if (recv_data(sock, p, 1) != 1)
-	return -1;
+	FAILX(-1, "recv_data");
 
     while (*p != '\n') {
 	p++;
 	if (recv_data(sock, p, 1) != 1)
-	    return -1;
+	    FAILX(-1, "recv_data");
     }
     *p = '\0';
 
@@ -73,12 +73,12 @@ libadjust_recv_file(char *filename)
     remote_info = file_info_alloc();
 
     if (sscanf(buffer, "%[^:]:%ld:%ld.%9ld", remote_filename, &remote_info->size, &remote_info->mtime.tv_sec, &remote_info->mtime.tv_nsec) != 4)
-	return -1;
+	FAILX(-1, "sscanf");
 
     remote_info->filename = strdup(filename);
 
     if (receive_file_data(sock, filename, remote_info) < 0)
-	return -1;
+	FAILX(-1, "receive_file_data");
 
     synchronized += remote_info->size;
     file_info_free(remote_info);
@@ -111,15 +111,15 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
 	    local_info->transfer_mode = TM_WHOLE_FILE;
 	    // warnx("destination file does not exist");
 	} else {
-	    return -1;
+	    FAIL(-1, "file_info_new");
 	}
     }
 
     if (send_data(fd, &answer, 1) != 1)
-	return -1;
+	FAILX(-1, "send_data");
 
     if (file_recv(fd, local_info, remote_info) < 0)
-	res = -1;
+	FAILX(-1, "file_recv");
 
     file_info_free(local_info);
 
@@ -153,7 +153,7 @@ map_current_block(struct file_info *file)
     file->data = mmap(NULL, file->data_size, file->mmap_mode, MAP_SHARED, file->fd, file->offset);
 
     if (file->data == MAP_FAILED)
-	return -1;
+	FAIL(-1, "mmap");
 
     return 0;
 }
@@ -176,7 +176,7 @@ int
 file_map_next_block(struct file_info *file)
 {
     if (unmap_current_block(file) < 0)
-	return -1;
+	FAILX(-1, "unmap_current_block");
 
     file->offset += file->data_size;
 
@@ -185,7 +185,7 @@ file_map_next_block(struct file_info *file)
 
     file->data_size = MIN(LARGE_BLOCK_SIZE, file->size - file->offset);
     if (map_current_block(file) < 0)
-	return -1;
+	FAILX(-1, "map_current_block");
 
     return 1;
 }
@@ -201,7 +201,7 @@ int
 file_set_size(struct file_info *file, const off_t size)
 {
     if (ftruncate(file->fd, size) < 0)
-	return -1;
+	FAIL(-1, "ftruncate");
 
     file->size = size;
 
@@ -212,7 +212,7 @@ int
 file_set_mtime(const struct file_info *file, const struct timespec mtime)
 {
     if (fsync(file->fd) < 0)
-	return -1;
+	FAIL(-1, "fsync");
 
     struct timespec times[] = {
 	{ 0, UTIME_OMIT },
@@ -220,7 +220,7 @@ file_set_mtime(const struct file_info *file, const struct timespec mtime)
     };
 
     if (futimens(file->fd, times) < 0)
-	return -1;
+	FAIL(-1, "futimens");
 
     return 0;
 }
@@ -230,7 +230,7 @@ file_send(const int fd, struct file_info *file)
 {
     char buffer;
     if (recv_data(fd, &buffer, 1) < 0)
-	return -1;
+	FAILX(-1, "recv_data");
 
     switch (buffer) {
     case ADJUST_FILE_UPTODATE:
@@ -250,19 +250,19 @@ int
 file_recv(const int fd, struct file_info *local, const struct file_info *remote)
 {
     if (file_open(local, O_RDWR | O_CREAT) < 0)
-	return -1;
+	FAILX(-1, "file_open");
 
     if (file_set_size(local, remote->size) < 0)
-	return -1;
+	FAILX(-1, "file_set_size");
 
     if (file_recv_content(fd, local) < 0)
-	return -1;
+	FAILX(-1, "file_recv_content");
 
     if (file_set_mtime(local, remote->mtime) < 0)
-	return -1;
+	FAILX(-1, "file_set_mtime");
 
     if (file_close(local) < 0)
-	return -1;
+	FAILX(-1, "file_close");
 
     return 0;
 }

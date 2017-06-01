@@ -1,6 +1,8 @@
 #ifndef _ADJUST_INTERNAL_H
 #define _ADJUST_INTERNAL_H
 
+#include <stdbool.h>
+
 #include <sys/stat.h>
 
 #define ADJUST_FILE_UPTODATE 0
@@ -9,6 +11,10 @@
 
 #define LARGE_BLOCK_SIZE (16 * 1024 * 1024)
 #define SMALL_BLOCK_SIZE (4 * 1024)
+
+#define _FAIL(eval, print_errno, format, ...) do { error_push(__FILE__, __LINE__, __func__, print_errno, format, ## __VA_ARGS__); return eval; } while (0)
+#define FAIL(eval, format, ...) do { _FAIL(eval, true, format, ## __VA_ARGS__); } while (0)
+#define FAILX(eval, format, ...) do { _FAIL(eval, false, format, ## __VA_ARGS__); } while (0)
 
 struct file_info {
     char *filename;
@@ -58,5 +64,7 @@ void			 sha256(const void *data, const size_t length, unsigned char digest[32]);
 
 int			 recv_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 int			 send_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
+
+int			 error_push(const char *file, const int lineno, const char *function, const bool print_errno, const char *format, ...);
 
 #endif /* !_ADJUST_INTERNAL_H */

@@ -4,6 +4,8 @@
 
 #include "adjust.h"
 
+void		 log_error_and_exit(char *origin);
+
 int
 main(int argc, char *argv[])
 {
@@ -16,10 +18,10 @@ main(int argc, char *argv[])
     sscanf(argv[1], "%d", &port);
 
     if (libadjust_socket_open_out(port) < 0)
-	err(EXIT_FAILURE, "libadjust_socket_open_out");
+	log_error_and_exit("libadjust_socket_open_out");
 
     if (libadjust_send_file(argv[2]) < 0)
-	err(EXIT_FAILURE, "libadjust_send_file");
+	log_error_and_exit("libadjust_send_file");
 
     libadjust_socket_close();
 
@@ -31,4 +33,12 @@ main(int argc, char *argv[])
     printf("client: sent %ld bytes, received %ld bytes\n", byte_send, byte_recv);
 
     exit(EXIT_SUCCESS);
+}
+
+void
+log_error_and_exit(char *origin)
+{
+    fprintf(stderr, "Failure in %s.  Error backtrace:\n", origin);
+    libadjust_error_print(stderr);
+    exit(EXIT_FAILURE);
 }
