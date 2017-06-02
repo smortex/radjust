@@ -7,9 +7,11 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 
-#if defined(__FreeBSD__)
-#include <sha256.h>
-#elif defined(__linux__)
+#ifdef HAVE_MD
+#  include <sha256.h>
+#endif
+
+#ifdef HAVE_OPENSSL
 #  include <openssl/sha.h>
 #endif
 
