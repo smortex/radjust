@@ -96,12 +96,9 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
     if ((local_info = file_info_new(filename))) {
 	if (0 == file_info_cmp(local_info, remote_info)) {
 	    answer = ADJUST_FILE_UPTODATE;
-	    // warnx("file match");
-	    return res;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
 	    local_info->transfer_mode = TM_ADJUST;
-	    // warnx("need adjusting");
 	}
     } else {
 	if (errno == ENOENT) {
@@ -109,7 +106,6 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
 	    local_info = file_info_alloc();
 	    local_info->filename = strdup(filename);
 	    local_info->transfer_mode = TM_WHOLE_FILE;
-	    // warnx("destination file does not exist");
 	} else {
 	    FAIL(-1, "file_info_new");
 	}
@@ -117,6 +113,9 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
 
     if (send_data(fd, &answer, 1) != 1)
 	FAILX(-1, "send_data");
+
+    if (answer == ADJUST_FILE_UPTODATE)
+	return 0;
 
     if (file_recv(fd, local_info, remote_info) < 0)
 	FAILX(-1, "file_recv");
@@ -229,11 +228,12 @@ int
 file_send(const int fd, struct file_info *file)
 {
     char buffer;
-    if (recv_data(fd, &buffer, 1) < 0)
+    if (recv_data(fd, &buffer, 1) != 1)
 	FAILX(-1, "recv_data");
 
     switch (buffer) {
     case ADJUST_FILE_UPTODATE:
+	return 0;
 	break;
     case ADJUST_FILE_MISMATCH:
 	file->transfer_mode = TM_ADJUST;

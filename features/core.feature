@@ -12,6 +12,20 @@ Feature: File adjustement
     And the server should have sent 1 B
     And the server should have received 78 B
 
+  Scenario: Adjust smaller destination file
+    Given a random file "source" exists and is 42 B
+    And a random file "target" exists and is 2 B
+    And "source" and "target" have different mtime
+    When I synchronize "source" -> "target"
+    Then the file "target" should exist
+    And the file "target" sould be 42 B long
+    And "source" and "target" should have the same mtime
+    And "source" and "target" should have the same content
+    And the client should have sent 111 B
+    And the client should have received 34 B
+    And the server should have sent 34 B
+    And the server should have received 111 B
+
   Scenario: Adjust different destination file
     Given a random file "source" exists and is 42 B
     And a random file "target" exists and is 42 B
@@ -25,6 +39,19 @@ Feature: File adjustement
     And the client should have received 34 B
     And the server should have sent 34 B
     And the server should have received 111 B
+
+  Scenario: Do nothing with synchronized destination file
+    Given a random file "source" exists and is 42 B
+    And a "target" is synchronized with "source"
+    When I synchronize "source" -> "target"
+    Then the file "target" should exist
+    And the file "target" sould be 42 B long
+    And "source" and "target" should have the same mtime
+    And "source" and "target" should have the same content
+    And the client should have sent 36 B
+    And the client should have received 1 B
+    And the server should have sent 1 B
+    And the server should have received 36 B
 
   Scenario: Adjust larger destination file
     Given a random file "source" exists and is 42 B

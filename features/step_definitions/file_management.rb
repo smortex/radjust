@@ -9,6 +9,15 @@ Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
   end
 end
 
+Given(/^a "([^"]*)" is synchronized with "([^"]*)"$/) do |destination, source|
+  source_filename = tmp_file_name(source)
+  destination_filename = tmp_file_name(destination)
+
+  FileUtils.cp(source_filename, destination_filename)
+  source_stat = File.stat(source_filename)
+  File.utime(source_stat.atime, source_stat.mtime, destination_filename)
+end
+
 Given(/^"([^"]*)" and "([^"]*)" have different mtime$/) do |left, right|
   left_filename  = tmp_file_name(left)
   right_filename = tmp_file_name(right)
