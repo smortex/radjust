@@ -1,13 +1,17 @@
 #include <err.h>
+#include <fcntl.h>
 #include <getopt.h>
+#include <paths.h>
+#include <signal.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+#include <sys/wait.h>
 
 #include "adjust.h"
-
-#include <unistd.h>
 
 const char *progname;
 
@@ -16,6 +20,7 @@ int		 start_client(int argc, char *argv[]);
 int		 start_server(int argc, char *argv[]);
 bool		 is_remote(const char *subject);
 void		 extract_remote_host_and_filename(char *subject, char **remote_host, char **filename);
+pid_t		 run_external_command(char *command, int *in, int *out, int *err);
 int		 transmit(char *filename);
 
 struct {
@@ -111,6 +116,18 @@ start_client(int argc, char *argv[])
     return 0;
 }
 
+void
+sigchld_handler(int sig, siginfo_t *info, void *ucontext)
+{
+    (void) sig;
+    (void) ucontext ;
+
+    if (info->si_code == CLD_EXITED && info->si_status != 0) {
+	fprintf(stderr, "child process exited with error code %d\n", info->si_status);
+	exit(EXIT_FAILURE);
+    }
+}
+
 int
 start_server(int argc, char *argv[])
 {
@@ -136,18 +153,26 @@ start_server(int argc, char *argv[])
     }
 
     char *cmd;
-    asprintf(&cmd, "%s -R 0:127.0.0.1:%d %s radjust --client %s %s 2>&1", options.rsh, local_port, remote_host, client_flags, remote_filename);
+    asprintf(&cmd, "%s -R 0:127.0.0.1:%d -- %s radjust --client %s %s", options.rsh, local_port, remote_host, client_flags, remote_filename);
 
-    FILE *f;
+    int client_pid;
+    int in_fd, out_fd, err_fd;
 
-    if (!(f = popen(cmd, "r+"))) {
-	fprintf(stderr, "popen\n");
-	goto fail;
+    struct sigaction act = {
+	.sa_sigaction = sigchld_handler,
+	.sa_flags = SA_SIGINFO,
+    };
+    struct sigaction oact;
+    sigfillset(&act.sa_mask);
+    sigaction(SIGCHLD, &act, &oact);
+
+    if ((client_pid = run_external_command(cmd, &in_fd, &out_fd, &err_fd)) < 0) {
+	err(EXIT_FAILURE, "run_external_command\n");
     }
 
     char buffer[BUFSIZ];
-    if (!fgets(buffer, sizeof(buffer), f)) {
-	fprintf(stderr, "fgets\n");
+    if (read(err_fd, buffer, sizeof(buffer)) < 1) {
+	perror("read");
 	goto fail;
     }
 
@@ -157,20 +182,26 @@ start_server(int argc, char *argv[])
 	goto fail;
     }
 
-    fprintf(f, "%d\n", remote_port);
-    fflush(f);
+    sprintf(buffer, "%d\n", remote_port);
+    write(in_fd, buffer, strlen(buffer));
 
     if (libadjust_socket_open_in_accept() < 0)
 	errx(EXIT_FAILURE, "libadjust_socket_open_in_accept");
+
+    sigaction(SIGCHLD, &oact, NULL);
 
     if (transmit(local_filename) < 0)
 	errx(EXIT_FAILURE, "transmit");
 
 fail:
     libadjust_socket_close();
-    if (pclose(f) < 0) {
-	err(EXIT_FAILURE, "pclose");
+
+    int exit_code;
+    if (waitpid(client_pid, &exit_code, 0) < 0) {
+	err(EXIT_FAILURE, "waitpid");
     }
+    if (exit_code != 0)
+	err(EXIT_FAILURE, "client exited with error");
     free(cmd);
 
     return 0;
@@ -218,4 +249,58 @@ is_remote(const char *subject)
 	return true;
     else
 	return false;
+}
+
+extern char **environ;
+
+pid_t
+run_external_command(char *command, int *in_fd, int *out_fd, int *err_fd)
+{
+    pid_t res;
+    char *argv[4];
+    int pipes[3][2];
+
+    if (pipe2(pipes[0], O_CLOEXEC) < 0)
+	err(EXIT_FAILURE, "pipe2");
+    if (pipe2(pipes[1], O_CLOEXEC) < 0)
+	err(EXIT_FAILURE, "pipe2");
+    if (pipe2(pipes[2], O_CLOEXEC) < 0)
+	err(EXIT_FAILURE, "pipe2");
+
+    switch (res = fork()) {
+    case -1:
+	err(EXIT_FAILURE, "fork");
+	break;
+    case 0:
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
+	dup2(pipes[0][0], STDIN_FILENO);
+	dup2(pipes[1][1], STDOUT_FILENO);
+	dup2(pipes[2][1], STDERR_FILENO);
+
+	argv[0] = "sh";
+	argv[1] = "-c";
+	argv[2] = command;
+	argv[3] = NULL;
+
+	execve(_PATH_BSHELL, argv, environ);
+
+	err(EXIT_FAILURE, "execve");
+	return -1;
+	break;
+    default:
+	break;
+    }
+
+    close(pipes[0][0]);
+    close(pipes[1][1]);
+    close(pipes[2][1]);
+
+    *in_fd  = pipes[0][1];
+    *out_fd = pipes[1][0];
+    *err_fd = pipes[2][0];
+
+    return res;
 }
