@@ -1,2 +1,2 @@
 add_library(adjust error.c file.c file_info.c networking.c)
-include_directories(${MD_INCLUDE_DIR})
+include_directories(${MESSAGE_DIGEST_INCLUDE_DIR})
