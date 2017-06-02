@@ -3,6 +3,12 @@ cmake_policy(VERSION 2.8)
 
 project(radjust LANGUAGES C)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+	add_definitions("-D_GNU_SOURCE")
+endif("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+
 find_library(MD_LIBRARY NAMES md)
 find_path(MD_INCLUDE_DIR sha256.h)
 
