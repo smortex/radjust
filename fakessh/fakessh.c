@@ -1,3 +1,4 @@
+#include <err.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,9 +63,11 @@ main(int argc, char *argv[])
     argc -= 1;
     argv += 1;
 
-    if (execvp(argv[0], argv) < 0)
-	perror("execvp");
+    if (execvp(argv[0], argv) < 0) {
+	err(EXIT_FAILURE, "execvp");
+    }
 
+    /* NOTREACHED */
     exit(EXIT_SUCCESS);
 }
 
