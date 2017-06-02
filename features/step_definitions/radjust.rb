@@ -25,3 +25,13 @@ When(/^I synchronize "([^"]*)" \-> "([^"]*)"$/) do |source, destination|
   client_stdout.close
   client_stderr.close
 end
+
+When(/^I synchronize local "([^"]*)" \-> remote "([^"]*)"$/) do |source, destination|
+  `env PATH=radjust radjust -e fakessh/fakessh #{tmp_file_name(source)} user@host:#{tmp_file_name(destination)}`
+  expect($?.success?).to be true
+end
+
+When(/^I synchronize remote "([^"]*)" \-> local "([^"]*)"$/) do |source, destination|
+  `env PATH=radjust radjust -e fakessh/fakessh user@host:#{tmp_file_name(source)} #{tmp_file_name(destination)}`
+  expect($?.success?).to be true
+end

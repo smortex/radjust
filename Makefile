@@ -1,4 +1,4 @@
-SUBDIR=	libadjust client server
+SUBDIR=	libadjust client server radjust fakessh
 
 CFLAGS+=	-I../libadjust
 
