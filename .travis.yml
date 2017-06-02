@@ -7,8 +7,8 @@ compiler:
 addons:
   apt:
     packages:
+      - cmake
       - ruby-bundler
-      - freebsd-buildutils
       - libssl-dev
 
-script: freebsd-make && freebsd-make test
+script: cmake . && make && bundle install --jobs=3 --retry=3 && bundle exec cucumber
