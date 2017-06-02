@@ -65,6 +65,9 @@ main(int argc, char *argv[])
     argv += optind;
 
     if (!options.send && !options.recv) {
+	if (argc != 2)
+	    usage();
+
 	if (is_remote(argv[0]))
 	    options.recv = 1;
 	if (is_remote(argv[argc - 1]))
