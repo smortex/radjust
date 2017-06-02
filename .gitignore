@@ -7,6 +7,8 @@
 *.full
 Gemfile.lock
 client/client
+fakessh/fakessh
 libadjust/libadjust.a
 libadjust/libadjust_p.a
+radjust/radjust
 server/server
