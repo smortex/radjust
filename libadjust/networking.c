@@ -11,9 +11,6 @@
 #include "adjust.h"
 #include "adjust_internal.h"
 
-static size_t byte_send = 0;
-static size_t byte_recv = 0;
-
 int sock;
 
 int
@@ -262,7 +259,7 @@ send_data(int fd, void *data, size_t length)
     int res = send(fd, data, length, 0);
     if (res < 0)
 	FAIL(-1, "send");
-    byte_send += res;
+    stats.bytes_send += res;
     return res;
 }
 
@@ -272,15 +269,6 @@ recv_data(int fd, void *data, size_t length)
     int res = recv(fd, data, length, MSG_WAITALL);
     if (res < 0)
 	FAIL(-1, "recv");
-    byte_recv += res;
+    stats.bytes_recv += res;
     return res;
-}
-
-void
-get_networking_stats(size_t *send, size_t *recv)
-{
-    if (send)
-	*send = byte_send;
-    if (recv)
-	*recv = byte_recv;
 }

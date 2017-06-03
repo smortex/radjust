@@ -29,12 +29,7 @@ main(int argc, char *argv[])
 
     libadjust_socket_close();
 
-    size_t byte_synchronized, byte_send, byte_recv;
-
-    get_xfer_stats(&byte_synchronized);
-    get_networking_stats(&byte_send, &byte_recv);
-    printf("server: synchronized %ld bytes\n", byte_synchronized);
-    printf("server: sent %ld bytes, received %ld bytes\n", byte_send, byte_recv);
+    libadjust_stats_print(stdout);
 
     exit(EXIT_SUCCESS);
 }

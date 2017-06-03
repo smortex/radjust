@@ -30,6 +30,14 @@ struct file_info {
     int mmap_mode;
 };
 
+struct libadjust_stats {
+    size_t bytes_synchronized;
+    size_t bytes_send;
+    size_t bytes_recv;
+};
+
+extern struct libadjust_stats stats;
+
 struct file_info	*file_info_alloc(void) __attribute__((warn_unused_result));
 struct file_info	*file_info_new(const char *filename) __attribute__((warn_unused_result));
 

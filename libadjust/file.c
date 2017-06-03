@@ -23,7 +23,6 @@ static int		 unmap_current_block(struct file_info *file);
 static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
 
 extern int sock;
-static size_t synchronized;
 
 int
 libadjust_send_file(char *filename)
@@ -47,7 +46,7 @@ libadjust_send_file(char *filename)
     if (file_close(info) < 0)
 	FAILX(-1, "file_close");
 
-    synchronized += info->size;
+    stats.bytes_synchronized += info->size;
     file_info_free(info);
 
     return 0;
@@ -82,7 +81,7 @@ libadjust_recv_file(char *filename)
     if (receive_file_data(sock, filename, remote_info) < 0)
 	FAILX(-1, "receive_file_data");
 
-    synchronized += remote_info->size;
+    stats.bytes_synchronized += remote_info->size;
     file_info_free(remote_info);
 
     return 0;
@@ -301,10 +300,4 @@ file_recv_content(const int fd, struct file_info *file)
     }
 
     return res;
-}
-
-void
-get_xfer_stats(size_t *bytes)
-{
-    *bytes = synchronized;
 }

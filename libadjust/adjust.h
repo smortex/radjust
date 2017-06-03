@@ -14,8 +14,7 @@ int			 libadjust_recv_file(char *filename) __attribute__((warn_unused_result));
 
 void			 libadjust_socket_close(void);
 
-void			 get_xfer_stats(size_t *bytes);
-void			 get_networking_stats(size_t *send, size_t *recv);
+void			 libadjust_stats_print(FILE *stream);
 
 void			 libadjust_error_print(FILE *stream);
 
