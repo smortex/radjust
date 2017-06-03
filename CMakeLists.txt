@@ -24,3 +24,7 @@ else(MD_LIBRARY AND MD_INCLUDE_DIR)
 endif(MD_LIBRARY AND MD_INCLUDE_DIR)
 
 subdirs(libadjust client server fakessh radjust)
+
+add_custom_target(style DEPENDS style_fix_space style_astyle)
+add_custom_target(style_fix_space COMMAND find . -name '*.[ch]' -exec perl -pi -e 's/[ \\t]+$$//' '{}' '\\;' COMMENT "Fixing invalid space sequences")
+add_custom_target(style_astyle COMMAND find . -name '*.[ch]' -exec astyle --style=linux --indent=force-tab-x --lineend=linux {} '\\;' COMMENT "Checking source code style" DEPENDS style_fix_space)
