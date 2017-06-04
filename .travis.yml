@@ -11,4 +11,4 @@ addons:
       - ruby-bundler
       - libssl-dev
 
-script: cmake . && make && bundle install --jobs=3 --retry=3 && bundle exec cucumber
+script: cmake -DCMAKE_BUILD_TYPE=Debug . && make && bundle install --jobs=3 --retry=3 && bundle exec cucumber
