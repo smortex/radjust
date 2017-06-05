@@ -34,6 +34,8 @@ struct libadjust_stats {
     size_t bytes_synchronized;
     size_t bytes_send;
     size_t bytes_recv;
+    int adjusted_blocks;
+    int adjusted_chunks;
 };
 
 extern struct libadjust_stats stats;

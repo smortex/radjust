@@ -209,8 +209,11 @@ send_block_adjustments(const int fd, const struct file_info *file)
 
 		if (send_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size) != this_block_size)
 		    FAILX(-1, "send_data");
+
+		stats.adjusted_chunks += 1;
 	    }
 	}
+	stats.adjusted_blocks += 1;
     }
 
     return 0;
@@ -246,8 +249,11 @@ recv_block_adjustments(const int fd, const struct file_info *file)
 	    if (buffer == 1) {
 		if (recv_data(fd, file->data + i * SMALL_BLOCK_SIZE, this_block_size) != this_block_size)
 		    FAILX(-1, "recv_data");
+
+		stats.adjusted_chunks += 1;
 	    }
 	}
+	stats.adjusted_blocks += 1;
     }
 
     return 0;

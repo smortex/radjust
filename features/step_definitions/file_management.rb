@@ -120,3 +120,11 @@ end
 Then(/^the server should have received (#{FILESIZE})$/) do |n|
   expect(@server_stdout).to match(/received #{n} bytes/)
 end
+
+Then(/^(\d+) block should have been synchronized$/) do |n|
+  expect(@client_stdout).to match(/in #{n} blocks/)
+end
+
+Then(/^(\d+) chunk should have been synchronized$/) do |n|
+  expect(@client_stdout).to match(/^#{n} chunks/)
+end

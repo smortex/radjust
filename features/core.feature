@@ -11,6 +11,8 @@ Feature: File adjustement
     And the client should have received 1 B
     And the server should have sent 1 B
     And the server should have received 78 B
+    And 0 block should have been synchronized
+    And 0 chunk should have been synchronized
 
   Scenario: Adjust smaller destination file
     Given a random file "source" exists and is 42 B
@@ -25,6 +27,8 @@ Feature: File adjustement
     And the client should have received 34 B
     And the server should have sent 34 B
     And the server should have received 111 B
+    And 1 block should have been synchronized
+    And 1 chunk should have been synchronized
 
   Scenario: Adjust different destination file
     Given a random file "source" exists and is 42 B
@@ -39,6 +43,8 @@ Feature: File adjustement
     And the client should have received 34 B
     And the server should have sent 34 B
     And the server should have received 111 B
+    And 1 block should have been synchronized
+    And 1 chunk should have been synchronized
 
   Scenario: Do nothing with synchronized destination file
     Given a random file "source" exists and is 42 B
@@ -52,6 +58,8 @@ Feature: File adjustement
     And the client should have received 1 B
     And the server should have sent 1 B
     And the server should have received 36 B
+    And 0 block should have been synchronized
+    And 0 chunk should have been synchronized
 
   Scenario: Adjust larger destination file
     Given a random file "source" exists and is 42 B
@@ -66,6 +74,8 @@ Feature: File adjustement
     And the client should have received 34 B
     And the server should have sent 34 B
     And the server should have received 111 B
+    And 1 block should have been synchronized
+    And 1 chunk should have been synchronized
 
   Scenario: Transfer only changed chunks
     Given a random file "source" exists and is 42 MB
@@ -79,3 +89,5 @@ Feature: File adjustement
     And the client should have received 131076 B
     And the server should have sent 131076 B
     And the server should have received 8330 B
+    And 1 block should have been synchronized
+    And 1 chunk should have been synchronized
