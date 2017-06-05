@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include "adjust.h"
 #include "adjust_internal.h"
@@ -26,6 +27,9 @@ libadjust_socket_open_out(const int port)
     address.sin_port = htons(port);
     address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
+    int val = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+
     if (connect(sock, (struct sockaddr *)&address, sizeof(address)) < 0)
 	FAIL(-1, "connect");
 
@@ -44,6 +48,9 @@ libadjust_socket_open_in(void)
     server_address.sin_family = AF_INET;
     server_address.sin_port = 0;
     server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+    int val = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 
     if (bind(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
 	FAIL(-1, "bind");
