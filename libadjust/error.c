@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "adjust.h"
+#include "adjust_internal.h"
+
 struct error {
     char *message;
     struct error *next;
