@@ -8,8 +8,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 78 B
-    And the client should have received 1 B
-    And the server should have sent 1 B
+    And the client should have received 3 B
+    And the server should have sent 3 B
     And the server should have received 78 B
     And 0 block should have been synchronized
     And 0 chunk should have been synchronized
@@ -24,8 +24,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 111 B
-    And the client should have received 34 B
-    And the server should have sent 34 B
+    And the client should have received 36 B
+    And the server should have sent 36 B
     And the server should have received 111 B
     And 1 block should have been synchronized
     And 1 chunk should have been synchronized
@@ -40,8 +40,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 111 B
-    And the client should have received 34 B
-    And the server should have sent 34 B
+    And the client should have received 37 B
+    And the server should have sent 37 B
     And the server should have received 111 B
     And 1 block should have been synchronized
     And 1 chunk should have been synchronized
@@ -55,8 +55,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 36 B
-    And the client should have received 1 B
-    And the server should have sent 1 B
+    And the client should have received 4 B
+    And the server should have sent 4 B
     And the server should have received 36 B
     And 0 block should have been synchronized
     And 0 chunk should have been synchronized
@@ -71,8 +71,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 111 B
-    And the client should have received 34 B
-    And the server should have sent 34 B
+    And the client should have received 39 B
+    And the server should have sent 39 B
     And the server should have received 111 B
     And 1 block should have been synchronized
     And 1 chunk should have been synchronized
@@ -86,8 +86,8 @@ Feature: File adjustement
     And "source" and "target" should have the same mtime
     And "source" and "target" should have the same content
     And the client should have sent 8330 B
-    And the client should have received 131076 B
-    And the server should have sent 131076 B
+    And the client should have received 131085 B
+    And the server should have sent 131085 B
     And the server should have received 8330 B
     And 1 block should have been synchronized
     And 1 chunk should have been synchronized

@@ -40,6 +40,15 @@ libadjust_send_file(char *filename)
     if (send_data(sock, buffer, strlen(buffer)) != (int) strlen(buffer))
 	FAILX(-1, "send_data");
 
+    struct file_info *remote;
+    remote = file_info_alloc();
+
+    if (recv_line(buffer, sizeof(buffer)) < 0)
+	FAILX(-1, "read_line");
+
+    if (sscanf(buffer, "%ld", &remote->size) != 1)
+	FAILX(-1, "sscanf");
+
     if (file_send(sock, info) < 0)
 	FAILX(-1, "file_send");
 
@@ -102,6 +111,12 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
 	    FAIL(-1, "file_info_new");
 	}
     }
+
+    char buffer[BUFSIZ];
+    sprintf(buffer, "%ld\n", local_info->size);
+
+    if (send_data(fd, buffer, strlen(buffer)) < 0)
+	FAIL(-1, "send_data");
 
     if (send_data(fd, &answer, 1) != 1)
 	FAILX(-1, "send_data");

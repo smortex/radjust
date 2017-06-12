@@ -12,6 +12,7 @@ file_info_alloc(void)
     res = malloc(sizeof(*res));
     res->filename = NULL;
     res->fd = 0;
+    res->size = 0;
     res->offset = 0;
     res->data = NULL;
     return res;
