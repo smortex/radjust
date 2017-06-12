@@ -72,6 +72,8 @@ int			 file_recv_content(const int fd, struct file_info *local) __attribute__((w
 
 void			 sha256(const void *data, const size_t length, unsigned char digest[32]);
 
+int			 recv_line(char *buffer, size_t length);
+
 int			 recv_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 int			 send_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 

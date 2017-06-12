@@ -56,17 +56,8 @@ int
 libadjust_recv_file(char *filename)
 {
     char buffer[BUFSIZ];
-    char *p = buffer;
-
-    if (recv_data(sock, p, 1) != 1)
-	FAILX(-1, "recv_data");
-
-    while (*p != '\n') {
-	p++;
-	if (recv_data(sock, p, 1) != 1)
-	    FAILX(-1, "recv_data");
-    }
-    *p = '\0';
+    if (recv_line(buffer, sizeof(buffer)) < 0)
+	FAILX(-1, "read_line");
 
     char remote_filename[BUFSIZ];
 

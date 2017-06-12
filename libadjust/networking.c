@@ -267,6 +267,29 @@ recv_block_adjustments(const int fd, const struct file_info *file)
 }
 
 int
+recv_line(char *buffer, size_t length)
+{
+    char *p = buffer;
+    char *e = buffer + length;
+
+    if (recv_data(sock, p, 1) != 1)
+	FAILX(-1, "recv_data");
+
+    while (*p != '\n') {
+	p++;
+
+	if (p > e)
+	    FAILX(-1, "end of buffer reached");
+
+	if (recv_data(sock, p, 1) != 1)
+	    FAILX(-1, "recv_data");
+    }
+    *p = '\0';
+
+    return 0;
+}
+
+int
 send_data(int fd, void *data, size_t length)
 {
     int res = send(fd, data, length, 0);
