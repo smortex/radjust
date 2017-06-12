@@ -63,7 +63,7 @@ Feature: File adjustement
 
   Scenario: Adjust larger destination file
     Given a random file "source" exists and is 42 B
-    And a random file "target" exists and is 4 KB
+    And a random file "target" exists and is 4 KiB
     And "source" and "target" have different mtime
     When I synchronize "source" -> "target"
     Then the file "target" should exist
@@ -78,7 +78,7 @@ Feature: File adjustement
     And 1 chunk should have been synchronized
 
   Scenario: Transfer only changed chunks
-    Given a random file "source" exists and is 42 MB
+    Given a random file "source" exists and is 42 MiB
     And "target" is a copy of "source" with 1 byte changed
     And "source" and "target" have different mtime
     When I synchronize "source" -> "target"
