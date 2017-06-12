@@ -88,15 +88,15 @@ libadjust_socket_close(void)
 }
 
 int
-send_whole_file_content(const int fd, struct file_info *file)
+send_whole_file_content(const int fd, struct file_info *local)
 {
     off_t data_sent = 0;
 
     char buffer[4 * 1024];
 
-    while (data_sent < file->size) {
+    while (data_sent < local->size) {
 
-	int res = read(file->fd, buffer, MIN((off_t)sizeof(buffer), file->size - data_sent));
+	int res = read(local->fd, buffer, MIN((off_t)sizeof(buffer), local->size - data_sent));
 
 	if (send_data(fd, buffer, res) != res)
 	    FAILX(-1, "send_data");
@@ -108,20 +108,20 @@ send_whole_file_content(const int fd, struct file_info *file)
 }
 
 int
-recv_whole_file_content(const int fd, struct file_info *file)
+recv_whole_file_content(const int fd, struct file_info *local)
 {
     int data_recv = 0;
 
     char buffer[4 * 1024];
 
-    while (data_recv < file->size) {
-	int expect = MIN((off_t)sizeof(buffer), file->size - data_recv);
+    while (data_recv < local->size) {
+	int expect = MIN((off_t)sizeof(buffer), local->size - data_recv);
 	int res;
 
 	if ((res = recv_data(fd, buffer, expect)) != expect)
 	    FAILX(-1, "recv_data");
 
-	if (write(file->fd, buffer, res) != res)
+	if (write(local->fd, buffer, res) != res)
 	    FAIL(-1, "write");
 
 	data_recv += res;
@@ -131,17 +131,17 @@ recv_whole_file_content(const int fd, struct file_info *file)
 }
 
 int
-send_file_adjustments(const int fd, struct file_info *file)
+send_file_adjustments(const int fd, struct file_info *local)
 {
-    if (file_map_first_block(file) < 0)
+    if (file_map_first_block(local) < 0)
 	FAILX(-1, "file_map_first_block");
 
-    if (send_block_adjustments(fd, file) < 0)
+    if (send_block_adjustments(fd, local) < 0)
 	FAILX(-1, "send_block_adjustments");
 
     bool finished = false;
     while (!finished) {
-	switch (file_map_next_block(file)) {
+	switch (file_map_next_block(local)) {
 	case -1:
 	    FAILX(-1, "file_map_next_block");
 	    break;
@@ -149,7 +149,7 @@ send_file_adjustments(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    if (send_block_adjustments(fd, file) < 0)
+	    if (send_block_adjustments(fd, local) < 0)
 		FAILX(-1, "send_block_adjustments");
 	    break;
 	}
@@ -159,17 +159,17 @@ send_file_adjustments(const int fd, struct file_info *file)
 }
 
 int
-recv_file_adjustments(const int fd, struct file_info *file)
+recv_file_adjustments(const int fd, struct file_info *local)
 {
-    if (file_map_first_block(file) < 0)
+    if (file_map_first_block(local) < 0)
 	FAILX(-1, "file_map_first_block");
 
-    if (recv_block_adjustments(fd, file) < 0)
+    if (recv_block_adjustments(fd, local) < 0)
 	FAILX(-1, "recv_block_adjustments");
 
     bool finished = false;
     while (!finished) {
-	switch (file_map_next_block(file)) {
+	switch (file_map_next_block(local)) {
 	case -1:
 	    FAILX(-1, "file_map_next_block");
 	    break;
@@ -177,7 +177,7 @@ recv_file_adjustments(const int fd, struct file_info *file)
 	    finished = true;
 	    break;
 	case 1:
-	    if (recv_block_adjustments(fd, file) < 0)
+	    if (recv_block_adjustments(fd, local) < 0)
 		FAILX(-1, "recv_block_adjustments");
 	    break;
 	}
