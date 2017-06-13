@@ -32,6 +32,8 @@ struct libadjust_stats {
     size_t bytes_synchronized;
     size_t bytes_send;
     size_t bytes_recv;
+    size_t bytes_adjusted;
+    size_t bytes_send_raw;
     int adjusted_blocks;
     int adjusted_chunks;
 };
