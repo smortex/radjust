@@ -266,7 +266,7 @@ file_send_content(const int fd, struct file_info *local, const struct file_info 
     if (send_file_adjustments(fd, local, remote) < 0)
 	FAILX(-1, "send_file_adjustments");
 
-    if (send_whole_file_content(fd, local) < 0)
+    if (send_end_of_file(fd, local) < 0)
 	FAILX(-1, "send_end_of_file");
 
     return 0;
@@ -281,7 +281,7 @@ file_recv_content(const int fd, struct file_info *local, const struct file_info 
     if (file_set_size(local, remote->size) < 0)
 	FAILX(-1, "file_set_size");
 
-    if (recv_whole_file_content(fd, local) < 0)
+    if (recv_end_of_file(fd, local) < 0)
 	FAILX(-1, "recv_end_of_file");
 
     return 0;
