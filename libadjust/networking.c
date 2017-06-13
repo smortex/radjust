@@ -88,7 +88,7 @@ libadjust_socket_close(void)
 }
 
 int
-send_whole_file_content(const int fd, struct file_info *local)
+send_end_of_file(const int fd, struct file_info *local)
 {
     char buffer[4 * 1024];
 
@@ -107,7 +107,7 @@ send_whole_file_content(const int fd, struct file_info *local)
 }
 
 int
-recv_whole_file_content(const int fd, struct file_info *local)
+recv_end_of_file(const int fd, struct file_info *local)
 {
     char buffer[4 * 1024];
 
