@@ -49,7 +49,7 @@ libadjust_send_file(char *filename)
     if (sscanf(buffer, "%ld", &remote->size) != 1)
 	FAILX(-1, "sscanf");
 
-    if (file_send(sock, info) < 0)
+    if (file_send(sock, info, remote) < 0)
 	FAILX(-1, "file_send");
 
     if (file_close(info) < 0)
@@ -99,14 +99,12 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
 	    answer = ADJUST_FILE_UPTODATE;
 	} else {
 	    answer = ADJUST_FILE_MISMATCH;
-	    local_info->transfer_mode = TM_ADJUST;
 	}
     } else {
 	if (errno == ENOENT) {
 	    answer = ADJUST_FILE_MISSING;
 	    local_info = file_info_alloc();
 	    local_info->filename = strdup(filename);
-	    local_info->transfer_mode = TM_WHOLE_FILE;
 	} else {
 	    FAIL(-1, "file_info_new");
 	}
@@ -232,25 +230,16 @@ file_set_mtime(const struct file_info *file, const struct timespec mtime)
 }
 
 int
-file_send(const int fd, struct file_info *file)
+file_send(const int fd, struct file_info *local, const struct file_info *remote)
 {
     char buffer;
     if (recv_data(fd, &buffer, 1) != 1)
 	FAILX(-1, "recv_data");
 
-    switch (buffer) {
-    case ADJUST_FILE_UPTODATE:
+    if (buffer == ADJUST_FILE_UPTODATE)
 	return 0;
-	break;
-    case ADJUST_FILE_MISMATCH:
-	file->transfer_mode = TM_ADJUST;
-	break;
-    case ADJUST_FILE_MISSING:
-	file->transfer_mode = TM_WHOLE_FILE;
-	break;
-    }
 
-    return file_send_content(fd, file);
+    return file_send_content(fd, local, remote);
 }
 
 int
@@ -259,10 +248,7 @@ file_recv(const int fd, struct file_info *local, const struct file_info *remote)
     if (file_open(local, O_RDWR | O_CREAT) < 0)
 	FAILX(-1, "file_open");
 
-    if (file_set_size(local, remote->size) < 0)
-	FAILX(-1, "file_set_size");
-
-    if (file_recv_content(fd, local) < 0)
+    if (file_recv_content(fd, local, remote) < 0)
 	FAILX(-1, "file_recv_content");
 
     if (file_set_mtime(local, remote->mtime) < 0)
@@ -275,35 +261,28 @@ file_recv(const int fd, struct file_info *local, const struct file_info *remote)
 }
 
 int
-file_send_content(const int fd, struct file_info *file)
+file_send_content(const int fd, struct file_info *local, const struct file_info *remote)
 {
-    int res = -1;
+    if (send_file_adjustments(fd, local, remote) < 0)
+	FAILX(-1, "send_file_adjustments");
 
-    switch (file->transfer_mode) {
-    case TM_ADJUST:
-	res = send_file_adjustments(fd, file);
-	break;
-    case TM_WHOLE_FILE:
-	res = send_whole_file_content(fd, file);
-	break;
-    }
+    if (send_whole_file_content(fd, local) < 0)
+	FAILX(-1, "send_end_of_file");
 
-    return res;
+    return 0;
 }
 
 int
-file_recv_content(const int fd, struct file_info *file)
+file_recv_content(const int fd, struct file_info *local, const struct file_info *remote)
 {
-    int res = -1;
+    if (recv_file_adjustments(fd, local, remote) < 0)
+	FAILX(-1, "recv_file_adjustments");
 
-    switch (file->transfer_mode) {
-    case TM_ADJUST:
-	res = recv_file_adjustments(fd, file);
-	break;
-    case TM_WHOLE_FILE:
-	res = recv_whole_file_content(fd, file);
-	break;
-    }
+    if (file_set_size(local, remote->size) < 0)
+	FAILX(-1, "file_set_size");
 
-    return res;
+    if (recv_whole_file_content(fd, local) < 0)
+	FAILX(-1, "recv_end_of_file");
+
+    return 0;
 }
