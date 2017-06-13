@@ -126,5 +126,5 @@ Then(/^(\d+) block should have been synchronized$/) do |n|
 end
 
 Then(/^(\d+) chunk should have been synchronized$/) do |n|
-  expect(@client_stdout).to match(/^#{n} chunks/)
+  expect(@client_stdout).to match(/in #{n} chunks/)
 end

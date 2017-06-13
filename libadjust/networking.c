@@ -100,6 +100,7 @@ send_whole_file_content(const int fd, struct file_info *local)
 	    FAILX(-1, "send_data");
 
 	local->offset += res;
+	stats.bytes_send_raw += res;
     }
 
     return 0;
@@ -121,6 +122,7 @@ recv_whole_file_content(const int fd, struct file_info *local)
 	    FAIL(-1, "write");
 
 	local->offset += res;
+	stats.bytes_send_raw += res;
     }
 
     return 0;
@@ -236,6 +238,7 @@ send_block_adjustments(const int fd, const struct file_info *file)
 		    FAILX(-1, "send_data");
 
 		stats.adjusted_chunks += 1;
+		stats.bytes_adjusted += this_block_size;
 	    }
 	}
 	stats.adjusted_blocks += 1;
@@ -276,6 +279,7 @@ recv_block_adjustments(const int fd, const struct file_info *file)
 		    FAILX(-1, "recv_data");
 
 		stats.adjusted_chunks += 1;
+		stats.bytes_adjusted += this_block_size;
 	    }
 	}
 	stats.adjusted_blocks += 1;
