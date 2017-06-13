@@ -127,8 +127,14 @@ recv_whole_file_content(const int fd, struct file_info *local)
 }
 
 int
-send_file_adjustments(const int fd, struct file_info *local)
+send_file_adjustments(const int fd, struct file_info *local, const struct file_info *remote)
 {
+    if (!remote->size)
+	return 0;
+
+    off_t actual_size = local->size;
+    local->size = MIN(local->size, remote->size);
+
     if (file_map_first_block(local) < 0)
 	FAILX(-1, "file_map_first_block");
 
@@ -151,12 +157,23 @@ send_file_adjustments(const int fd, struct file_info *local)
 	}
     }
 
+    if (lseek(local->fd, local->size, SEEK_SET) != local->size)
+	FAIL(-1, "lseek");
+
+    local->size = actual_size;
+
     return 0;
 }
 
 int
-recv_file_adjustments(const int fd, struct file_info *local)
+recv_file_adjustments(const int fd, struct file_info *local, const struct file_info *remote)
 {
+    if (!local->size)
+	return 0;
+
+    off_t actual_size = local->size;
+    local->size = MIN(local->size, remote->size);
+
     if (file_map_first_block(local) < 0)
 	FAILX(-1, "file_map_first_block");
 
@@ -178,6 +195,11 @@ recv_file_adjustments(const int fd, struct file_info *local)
 	    break;
 	}
     }
+
+    if (lseek(local->fd, local->size, SEEK_SET) != local->size)
+	FAIL(-1, "lseek");
+
+    local->size = actual_size;
 
     return 0;
 }
