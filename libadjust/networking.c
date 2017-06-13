@@ -90,18 +90,16 @@ libadjust_socket_close(void)
 int
 send_whole_file_content(const int fd, struct file_info *local)
 {
-    off_t data_sent = 0;
-
     char buffer[4 * 1024];
 
-    while (data_sent < local->size) {
+    while (local->offset < local->size) {
 
-	int res = read(local->fd, buffer, MIN((off_t)sizeof(buffer), local->size - data_sent));
+	int res = read(local->fd, buffer, MIN((off_t)sizeof(buffer), local->size - local->offset));
 
 	if (send_data(fd, buffer, res) != res)
 	    FAILX(-1, "send_data");
 
-	data_sent += res;
+	local->offset += res;
     }
 
     return 0;
@@ -110,12 +108,10 @@ send_whole_file_content(const int fd, struct file_info *local)
 int
 recv_whole_file_content(const int fd, struct file_info *local)
 {
-    int data_recv = 0;
-
     char buffer[4 * 1024];
 
-    while (data_recv < local->size) {
-	int expect = MIN((off_t)sizeof(buffer), local->size - data_recv);
+    while (local->offset < local->size) {
+	int expect = MIN((off_t)sizeof(buffer), local->size - local->offset);
 	int res;
 
 	if ((res = recv_data(fd, buffer, expect)) != expect)
@@ -124,7 +120,7 @@ recv_whole_file_content(const int fd, struct file_info *local)
 	if (write(local->fd, buffer, res) != res)
 	    FAIL(-1, "write");
 
-	data_recv += res;
+	local->offset += res;
     }
 
     return 0;
