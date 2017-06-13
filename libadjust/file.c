@@ -204,8 +204,10 @@ file_close(struct file_info *file)
 int
 file_set_size(struct file_info *file, const off_t size)
 {
-    if (ftruncate(file->fd, size) < 0)
-	FAIL(-1, "ftruncate");
+    if (file->size > size) {
+	if (ftruncate(file->fd, size) < 0)
+	    FAIL(-1, "ftruncate");
+    }
 
     file->size = size;
 
