@@ -76,7 +76,7 @@ libadjust_recv_file(char *filename)
     if (sscanf(buffer, "%[^:]:%ld:%ld.%9ld", remote_filename, &remote_info->size, &remote_info->mtime.tv_sec, &remote_info->mtime.tv_nsec) != 4)
 	FAILX(-1, "sscanf");
 
-    remote_info->filename = strdup(filename);
+    remote_info->filename = strdup(remote_filename);
 
     if (receive_file_data(sock, filename, remote_info) < 0)
 	FAILX(-1, "receive_file_data");
