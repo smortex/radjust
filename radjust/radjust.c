@@ -72,6 +72,10 @@ main(int argc, char *argv[])
 	    options.recv = 1;
 	if (is_remote(argv[argc - 1]))
 	    options.send = 1;
+
+	if (!options.send && !options.recv) {
+	    options.send = 1;
+	}
     }
 
     if (options.send && options.recv) {
@@ -156,7 +160,11 @@ start_server(int argc, char *argv[])
     }
 
     char *cmd;
+    if (remote_host) {
     asprintf(&cmd, "%s -R 0:127.0.0.1:%d -- %s radjust --client %s %s", options.rsh, local_port, remote_host, client_flags, remote_filename);
+    } else {
+	asprintf(&cmd, "%s --client %s %s", progname, client_flags, remote_filename);
+    }
 
     int client_pid;
     int in_fd, out_fd, err_fd;
@@ -173,6 +181,7 @@ start_server(int argc, char *argv[])
 	err(EXIT_FAILURE, "run_external_command\n");
     }
 
+    if (remote_host) {
     char buffer[BUFSIZ];
     if (read(err_fd, buffer, sizeof(buffer)) < 1) {
 	perror("read");
@@ -187,6 +196,11 @@ start_server(int argc, char *argv[])
 
     sprintf(buffer, "%d\n", remote_port);
     write(in_fd, buffer, strlen(buffer));
+    } else {
+	char buffer[BUFSIZ];
+	sprintf(buffer, "%d\n", local_port);
+	write(in_fd, buffer, strlen(buffer));
+    }
 
     if (libadjust_socket_open_in_accept() < 0)
 	errx(EXIT_FAILURE, "libadjust_socket_open_in_accept");
