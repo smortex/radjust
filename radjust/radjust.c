@@ -161,7 +161,7 @@ start_server(int argc, char *argv[])
 
     char *cmd;
     if (remote_host) {
-    asprintf(&cmd, "%s -R 0:127.0.0.1:%d -- %s radjust --client %s %s", options.rsh, local_port, remote_host, client_flags, remote_filename);
+	asprintf(&cmd, "%s -R 0:127.0.0.1:%d -- %s radjust --client %s %s", options.rsh, local_port, remote_host, client_flags, remote_filename);
     } else {
 	asprintf(&cmd, "%s --client %s %s", progname, client_flags, remote_filename);
     }
@@ -182,20 +182,20 @@ start_server(int argc, char *argv[])
     }
 
     if (remote_host) {
-    char buffer[BUFSIZ];
-    if (read(err_fd, buffer, sizeof(buffer)) < 1) {
-	perror("read");
-	goto fail;
-    }
+	char buffer[BUFSIZ];
+	if (read(err_fd, buffer, sizeof(buffer)) < 1) {
+	    perror("read");
+	    goto fail;
+	}
 
-    int remote_port;
-    if (sscanf(buffer, "Allocated port %d for remote forward to", &remote_port) != 1) {
-	fprintf(stderr, "can't read port number\n");
-	goto fail;
-    }
+	int remote_port;
+	if (sscanf(buffer, "Allocated port %d for remote forward to", &remote_port) != 1) {
+	    fprintf(stderr, "can't read port number\n");
+	    goto fail;
+	}
 
-    sprintf(buffer, "%d\n", remote_port);
-    write(in_fd, buffer, strlen(buffer));
+	sprintf(buffer, "%d\n", remote_port);
+	write(in_fd, buffer, strlen(buffer));
     } else {
 	char buffer[BUFSIZ];
 	sprintf(buffer, "%d\n", local_port);
