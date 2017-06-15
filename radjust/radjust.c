@@ -146,12 +146,10 @@ start_server(int argc, char *argv[])
 	errx(EXIT_FAILURE, "libadjust_socket_open_in");
 
     char *remote_host, *remote_filename;
-    char *local_filename;
 
     char *client_flags = "";
     if (options.send) {
 	client_flags = "--recv";
-	local_filename = argv[0];
 	extract_remote_host_and_filename(argv[argc - 1], &remote_host, &remote_filename);
 	argc -= 1;
     } else {
@@ -159,7 +157,6 @@ start_server(int argc, char *argv[])
 	    errx(EXIT_FAILURE, "Multiple remote sources are not supported");
 	client_flags = "--send";
 	extract_remote_host_and_filename(argv[0], &remote_host, &remote_filename);
-	local_filename = argv[1];
 	argc -= 1;
 	argv += 1;
     }
