@@ -32,7 +32,7 @@ libadjust_send_file(char *filename)
 	FAILX(-1, "file_info_new");
 
     if (file_open(info, O_RDONLY) < 0)
-	FAILX(-1, "file_open");
+	FAIL(-1, "file_open");
 
     char buffer[BUFSIZ];
     sprintf(buffer, "%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
@@ -248,7 +248,7 @@ int
 file_recv(const int fd, struct file_info *local, const struct file_info *remote)
 {
     if (file_open(local, O_RDWR | O_CREAT) < 0)
-	FAILX(-1, "file_open");
+	FAIL(-1, "file_open");
 
     if (file_recv_content(fd, local, remote) < 0)
 	FAILX(-1, "file_recv_content");
