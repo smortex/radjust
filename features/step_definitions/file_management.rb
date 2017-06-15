@@ -115,25 +115,25 @@ Then(/^"([^"]*)" and "([^"]*)" should have the same content$/) do |source, desti
 end
 
 Then(/^the client should have sent (#{FILESIZE})$/) do |n|
-  expect(@client_stdout).to match(/sent #{n} bytes/)
+  expect(@client_stdout).to match(/sent #{n} bytes?/)
 end
 
 Then(/^the client should have received (#{FILESIZE})$/) do |n|
-  expect(@client_stdout).to match(/received #{n} bytes/)
+  expect(@client_stdout).to match(/received #{n} bytes?/)
 end
 
 Then(/^the server should have sent (#{FILESIZE})$/) do |n|
-  expect(@server_stdout).to match(/sent #{n} bytes/)
+  expect(@server_stdout).to match(/sent #{n} bytes?/)
 end
 
 Then(/^the server should have received (#{FILESIZE})$/) do |n|
-  expect(@server_stdout).to match(/received #{n} bytes/)
+  expect(@server_stdout).to match(/received #{n} bytes?/)
 end
 
 Then(/^(\d+) block should have been synchronized$/) do |n|
-  expect(@client_stdout).to match(/in #{n} blocks/)
+  expect(@client_stdout).to match(/in #{n} blocks?/)
 end
 
 Then(/^(\d+) chunk should have been synchronized$/) do |n|
-  expect(@client_stdout).to match(/in #{n} chunks/)
+  expect(@client_stdout).to match(/in #{n} chunks?/)
 end
