@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <inttypes.h>
@@ -314,6 +315,8 @@ recv_line(char *buffer, size_t length)
 int
 send_data(int fd, void *data, size_t length)
 {
+    assert(length > 0);
+
     int res = send(fd, data, length, 0);
     if (res < 0)
 	FAIL(-1, "send");
@@ -324,6 +327,8 @@ send_data(int fd, void *data, size_t length)
 int
 recv_data(int fd, void *data, size_t length)
 {
+    assert(length > 0);
+
     int res = recv(fd, data, length, MSG_WAITALL);
     if (!res)
 	FAILX(-1, "recv: Connection reset by peer");
