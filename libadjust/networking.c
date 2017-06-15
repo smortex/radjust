@@ -325,6 +325,18 @@ send_data(int fd, void *data, size_t length)
 }
 
 int
+peek_data(int fd, void *data, size_t length)
+{
+    assert(length > 0);
+
+    int res = recv(fd, data, length, MSG_WAITALL | MSG_PEEK);
+    if (res < 0)
+	FAIL(-1, "recv");
+    stats.bytes_recv += res;
+    return res;
+}
+
+int
 recv_data(int fd, void *data, size_t length)
 {
     assert(length > 0);

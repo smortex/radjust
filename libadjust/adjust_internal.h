@@ -31,6 +31,7 @@ struct file_info {
 
 struct libadjust_stats {
     size_t bytes_synchronized;
+    int files_synchronized;
     size_t bytes_send;
     size_t bytes_recv;
     size_t bytes_adjusted;
@@ -75,6 +76,7 @@ void			 sha256(const void *data, const size_t length, unsigned char digest[32]);
 
 int			 recv_line(char *buffer, size_t length);
 
+int			 peek_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 int			 recv_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 int			 send_data(int fd, void *data, size_t length) __attribute__((warn_unused_result));
 

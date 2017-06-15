@@ -21,7 +21,7 @@ int		 start_server(int argc, char *argv[]);
 bool		 is_remote(const char *subject);
 void		 extract_remote_host_and_filename(char *subject, char **remote_host, char **filename);
 pid_t		 run_external_command(char *command, int *in, int *out, int *err);
-int		 transmit(char *filename);
+int		 transmit(int argc, char *argv[]);
 
 struct {
     int client;
@@ -65,7 +65,7 @@ main(int argc, char *argv[])
     argv += optind;
 
     if (!options.send && !options.recv) {
-	if (argc != 2)
+	if (argc < 2)
 	    usage();
 
 	if (is_remote(argv[0]))
@@ -95,14 +95,14 @@ main(int argc, char *argv[])
 void
 usage(void)
 {
-    fprintf(stderr, "usage: %s [options] source destination\n", progname);
+    fprintf(stderr, "usage: %s [options] source... destination\n", progname);
     exit(EXIT_FAILURE);
 }
 
 int
 start_client(int argc, char *argv[])
 {
-    if (argc != 1)
+    if (argc < 1)
 	usage();
 
     char buffer[BUFSIZ];
@@ -115,7 +115,7 @@ start_client(int argc, char *argv[])
     if (libadjust_socket_open_out(port) < 0)
 	errx(EXIT_FAILURE, "libadjust_socket_open_out");
 
-    if (transmit(argv[0]) < 0)
+    if (transmit(argc, argv) < 0)
 	errx(EXIT_FAILURE, "transmit");
 
     libadjust_socket_close();
@@ -138,7 +138,7 @@ sigchld_handler(int sig, siginfo_t *info, void *ucontext)
 int
 start_server(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc < 2)
 	usage();
 
     int local_port = libadjust_socket_open_in();
@@ -152,11 +152,16 @@ start_server(int argc, char *argv[])
     if (options.send) {
 	client_flags = "--recv";
 	local_filename = argv[0];
-	extract_remote_host_and_filename(argv[1], &remote_host, &remote_filename);
+	extract_remote_host_and_filename(argv[argc - 1], &remote_host, &remote_filename);
+	argc -= 1;
     } else {
+	if (argc != 2)
+	    errx(EXIT_FAILURE, "Multiple remote sources are not supported");
 	client_flags = "--send";
 	extract_remote_host_and_filename(argv[0], &remote_host, &remote_filename);
 	local_filename = argv[1];
+	argc -= 1;
+	argv += 1;
     }
 
     char *cmd;
@@ -207,7 +212,7 @@ start_server(int argc, char *argv[])
 
     sigaction(SIGCHLD, &oact, NULL);
 
-    if (transmit(local_filename) < 0)
+    if (transmit(argc, argv) < 0)
 	errx(EXIT_FAILURE, "transmit");
 
 fail:
@@ -221,19 +226,21 @@ fail:
 	err(EXIT_FAILURE, "client exited with error");
     free(cmd);
 
+    libadjust_stats_print(stderr);
+
     return 0;
 }
 
 int
-transmit(char *filename)
+transmit(int argc, char *argv[])
 {
     int res = -1;
 
     if (options.send)
-	res = libadjust_send_file(filename);
+	res = libadjust_send_files(argc, argv);
 
     if (options.recv)
-	res = libadjust_recv_file(filename);
+	res = libadjust_recv_files(argv[0]);
 
     if (res < 0)
 	libadjust_error_print(stderr);

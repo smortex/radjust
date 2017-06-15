@@ -26,6 +26,29 @@ static int		 receive_file_data(const int fd, const char *filename, const struct 
 extern int sock;
 
 int
+libadjust_send_files(int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++) {
+	if (libadjust_send_file(argv[i]) < 0)
+	    FAILX(-1, "libadjust_send_file");
+    }
+
+    return 0;
+}
+
+int
+libadjust_recv_files(char *filename)
+{
+    char data;
+    while (peek_data(sock, &data, 1) > 0) {
+	if (libadjust_recv_file(filename) < 0)
+	    FAILX(-1, "libadjust_recv_file");
+    }
+
+    return 0;
+}
+
+int
 libadjust_send_file(char *filename)
 {
     struct file_info *info;
@@ -59,6 +82,8 @@ libadjust_send_file(char *filename)
     stats.bytes_synchronized += info->size;
     file_info_free(info);
 
+    stats.files_synchronized++;
+
     return 0;
 }
 
@@ -84,6 +109,8 @@ libadjust_recv_file(char *filename)
 
     stats.bytes_synchronized += remote_info->size;
     file_info_free(remote_info);
+
+    stats.files_synchronized++;
 
     return 0;
 }
