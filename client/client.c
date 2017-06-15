@@ -20,8 +20,8 @@ main(int argc, char *argv[])
     if (libadjust_socket_open_out(port) < 0)
 	log_error_and_exit("libadjust_socket_open_out");
 
-    if (libadjust_send_file(argv[2]) < 0)
-	log_error_and_exit("libadjust_send_file");
+    if (libadjust_send_files(1, argv + 2) < 0)
+	log_error_and_exit("libadjust_send_files");
 
     libadjust_socket_close();
 

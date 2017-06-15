@@ -29,7 +29,7 @@ int
 libadjust_send_files(int argc, char *argv[])
 {
     for (int i = 0; i < argc; i++) {
-	if (libadjust_send_file(argv[i]) < 0)
+	if (send_file(argv[i]) < 0)
 	    FAILX(-1, "libadjust_send_file");
     }
 
@@ -41,7 +41,7 @@ libadjust_recv_files(char *filename)
 {
     char data;
     while (peek_data(sock, &data, 1) > 0) {
-	if (libadjust_recv_file(filename) < 0)
+	if (recv_file(filename) < 0)
 	    FAILX(-1, "libadjust_recv_file");
     }
 
@@ -49,7 +49,7 @@ libadjust_recv_files(char *filename)
 }
 
 int
-libadjust_send_file(char *filename)
+send_file(char *filename)
 {
     struct file_info *info;
     if (!(info = file_info_new(filename)))
@@ -88,7 +88,7 @@ libadjust_send_file(char *filename)
 }
 
 int
-libadjust_recv_file(char *filename)
+recv_file(char *filename)
 {
     char buffer[BUFSIZ];
     if (recv_line(buffer, sizeof(buffer)) < 0)

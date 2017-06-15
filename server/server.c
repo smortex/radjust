@@ -24,7 +24,7 @@ main(int argc, char *argv[])
     if (libadjust_socket_open_in_accept() < 0)
 	log_error_and_exit("libadjust_socket_open_in_accept");
 
-    if (libadjust_recv_file(argv[1]) < 0)
+    if (libadjust_recv_files(argv[1]) < 0)
 	log_error_and_exit("libadjust_recv_file");
 
     libadjust_socket_close();

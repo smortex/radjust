@@ -12,9 +12,6 @@ int			 libadjust_socket_open_in_accept(void) __attribute__((warn_unused_result))
 int			 libadjust_send_files(int argc, char *argv[]) __attribute__((warn_unused_result));
 int			 libadjust_recv_files(char *filename) __attribute__((warn_unused_result));
 
-int			 libadjust_send_file(char *filename) __attribute__((warn_unused_result));
-int			 libadjust_recv_file(char *filename) __attribute__((warn_unused_result));
-
 void			 libadjust_socket_close(void);
 
 void			 libadjust_stats_print(FILE *stream);

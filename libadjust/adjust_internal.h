@@ -55,6 +55,9 @@ int			 file_close(struct file_info *file) __attribute__((warn_unused_result));
 int			 send_end_of_file(const int fd, struct file_info *local) __attribute__((warn_unused_result));
 int			 recv_end_of_file(const int fd, struct file_info *local) __attribute__((warn_unused_result));
 
+int			 send_file(char *filename) __attribute__((warn_unused_result));
+int			 recv_file(char *filename) __attribute__((warn_unused_result));
+
 int			 send_file_adjustments(const int fd, struct file_info *local, const struct file_info *remote) __attribute__((warn_unused_result));
 int			 recv_file_adjustments(const int fd, struct file_info *local, const struct file_info *remote) __attribute__((warn_unused_result));
 
