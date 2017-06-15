@@ -28,11 +28,13 @@ struct {
     int recv;
     int send;
     char *rsh;
+    int log_level;
 } options = {
     0,
     0,
     0,
     "ssh",
+    0,
 };
 
 static struct option longopts[] = {
@@ -40,6 +42,7 @@ static struct option longopts[] = {
     { "recv",   no_argument,       &options.recv,   1,   },
     { "send",   no_argument,       &options.send,   1,   },
     { "rsh",    required_argument, NULL,            'e', },
+    { "verbose",no_argument,       NULL,            'v', },
     { NULL,     0,                 NULL,            0,   },
 };
 
@@ -49,12 +52,15 @@ main(int argc, char *argv[])
     progname = argv[0];
 
     int ch;
-    while ((ch = getopt_long(argc, argv, "e:", longopts, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "e:v", longopts, NULL)) != -1) {
 	switch (ch) {
 	case 0:
 	    break;
 	case 'e':
 	    options.rsh = optarg;
+	    break;
+	case 'v':
+	    options.log_level++;
 	    break;
 	default:
 	    usage();
@@ -223,7 +229,8 @@ fail:
 	err(EXIT_FAILURE, "client exited with error");
     free(cmd);
 
-    libadjust_stats_print(stderr);
+    if (options.log_level >= 1)
+	libadjust_stats_print(stderr);
 
     return 0;
 }
