@@ -325,6 +325,8 @@ int
 recv_data(int fd, void *data, size_t length)
 {
     int res = recv(fd, data, length, MSG_WAITALL);
+    if (!res)
+	FAILX(-1, "recv: Connection reset by peer");
     if (res < 0)
 	FAIL(-1, "recv");
     stats.bytes_recv += res;
