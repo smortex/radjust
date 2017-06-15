@@ -3,6 +3,8 @@ require 'securerandom'
 Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
   filename = tmp_file_name(name)
 
+  FileUtils.rm_rf(filename) if File.directory?(filename)
+
   File.open(filename, 'wb') do |f|
     f.write(SecureRandom.random_bytes(size.to_i))
     f.fsync
@@ -52,7 +54,14 @@ end
 Given(/^a file "([^"]*)" does not exist$/) do |name|
   filename = tmp_file_name(name)
 
-  File.unlink(filename) if File.exist?(filename)
+  FileUtils.rm_rf(filename) if File.exist?(filename)
+end
+
+Given(/^a directory "([^"]*)" exist and is empty$/) do |name|
+  filename = tmp_file_name(name)
+
+  FileUtils.rm_rf(filename)
+  FileUtils.mkdir(filename)
 end
 
 Given(/^"([^"]*)" is a copy of "([^"]*)" with 1 byte changed$/) do |destination, source|
