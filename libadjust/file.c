@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -35,7 +36,7 @@ libadjust_send_file(char *filename)
 	FAIL(-1, "file_open");
 
     char buffer[BUFSIZ];
-    sprintf(buffer, "%s:%ld:%ld.%9ld\n", info->filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
+    sprintf(buffer, "%s:%ld:%ld.%9ld\n", basename(info->filename), info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
 
     if (send_data(sock, buffer, strlen(buffer)) != (int) strlen(buffer))
 	FAILX(-1, "send_data");
@@ -95,6 +96,13 @@ receive_file_data(const int fd, const char *filename, const struct file_info *re
     char answer;
 
     if ((local_info = file_info_new(filename))) {
+	if (local_info->type == T_DIRECTORY) {
+	    char buffer[BUFSIZ];
+	    sprintf(buffer, "%s/%s", filename, remote_info->filename);
+	    if (receive_file_data(fd, buffer, remote_info) < 0)
+		FAILX(-1, "receive_file_data");
+	    return 0;
+	}
 	if (0 == file_info_cmp(local_info, remote_info)) {
 	    answer = ADJUST_FILE_UPTODATE;
 	} else {

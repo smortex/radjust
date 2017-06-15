@@ -31,6 +31,7 @@ file_info_new(const char *filename)
 	res->filename = strdup(filename);
 	res->size = sb.st_size;
 	res->mtime = sb.st_mtim;
+	res->type = S_ISDIR(sb.st_mode) ? T_DIRECTORY : T_FILE;
     }
 
     return res;

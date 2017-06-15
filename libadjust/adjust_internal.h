@@ -20,6 +20,7 @@ struct file_info {
     char *filename;
     off_t size;
     struct timespec mtime;
+    enum { T_FILE, T_DIRECTORY } type;
 
     int fd;
     off_t offset;
