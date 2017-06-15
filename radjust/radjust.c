@@ -38,12 +38,12 @@ struct {
 };
 
 static struct option longopts[] = {
-    { "client", no_argument,       &options.client, 1,   },
-    { "recv",   no_argument,       &options.recv,   1,   },
-    { "send",   no_argument,       &options.send,   1,   },
-    { "rsh",    required_argument, NULL,            'e', },
-    { "verbose",no_argument,       NULL,            'v', },
-    { NULL,     0,                 NULL,            0,   },
+    { "client",  no_argument,       &options.client, 1,   },
+    { "recv",    no_argument,       &options.recv,   1,   },
+    { "send",    no_argument,       &options.send,   1,   },
+    { "rsh",     required_argument, NULL,            'e', },
+    { "verbose", no_argument,       NULL,            'v', },
+    { NULL,      0,                 NULL,            0,   },
 };
 
 int
