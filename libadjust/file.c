@@ -1,7 +1,9 @@
-#include <fcntl.h>
+#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -22,6 +24,8 @@
 static int		 map_current_block(struct file_info *file);
 static int		 unmap_current_block(struct file_info *file);
 static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
+static int		 create_directory_for(const char *filename);
+static int		 send_file_or_directory(const char *local_filename, const char *remote_filename);
 
 extern int sock;
 
@@ -29,8 +33,8 @@ int
 libadjust_send_files(int argc, char *argv[])
 {
     for (int i = 0; i < argc; i++) {
-	if (send_file(argv[i]) < 0)
-	    FAILX(-1, "send_file");
+	if (send_file_or_directory(argv[i], NULL) < 0)
+	    FAILX(-1, "send_file_or_directory");
     }
 
     return 0;
@@ -49,17 +53,64 @@ libadjust_recv_files(char *filename)
 }
 
 int
-send_file(const char *filename)
+send_file_or_directory(const char *local_filename, const char *remote_filename)
 {
     struct file_info *info;
-    if (!(info = file_info_new(filename)))
+    if (!(info = file_info_new(local_filename)))
 	FAILX(-1, "file_info_new");
+
+    if (info->type == T_DIRECTORY) {
+	char combined_local_filename[BUFSIZ];
+	char combined_remote_filename[BUFSIZ];
+
+	DIR *d;
+
+	if ((d = opendir(local_filename)) == NULL)
+	    FAIL(-1, "opendir");
+
+	struct dirent *dp;
+	while ((dp = readdir(d))) {
+	    if (strcmp(dp->d_name, ".") == 0)
+		continue;
+	    if (strcmp(dp->d_name, "..") == 0)
+		continue;
+
+	    if (!remote_filename) {
+		if (local_filename[strlen(local_filename) - 1] == '/') {
+		    sprintf(combined_remote_filename, "%s", dp->d_name);
+		} else {
+		    sprintf(combined_remote_filename, "%s/%s", basename(local_filename), dp->d_name);
+		}
+	    } else {
+		sprintf(combined_remote_filename, "%s/%s", remote_filename, dp->d_name);
+	    }
+
+	    sprintf(combined_local_filename, "%s/%s", local_filename, dp->d_name);
+
+	    send_file_or_directory(combined_local_filename, combined_remote_filename);
+	}
+
+	closedir(d);
+    } else {
+	if (send_file(info, remote_filename) < 0)
+	    FAILX(-1, "send_file");
+    }
+
+    file_info_free(info);
+    return 0;
+}
+
+int
+send_file(struct file_info *info, const char *remote_filename)
+{
+    if (!remote_filename)
+	remote_filename = basename(info->filename);
 
     if (file_open(info, O_RDONLY) < 0)
 	FAIL(-1, "file_open");
 
     char buffer[BUFSIZ];
-    sprintf(buffer, "%s:%ld:%ld.%9ld\n", basename(info->filename), info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
+    sprintf(buffer, "%s:%ld:%ld.%9ld\n", remote_filename, info->size, info->mtime.tv_sec, info->mtime.tv_nsec);
 
     if (send_data(sock, buffer, strlen(buffer)) != (int) strlen(buffer))
 	FAILX(-1, "send_data");
@@ -80,7 +131,6 @@ send_file(const char *filename)
 	FAILX(-1, "file_close");
 
     stats.bytes_synchronized += info->size;
-    file_info_free(info);
 
     stats.files_synchronized++;
 
@@ -183,7 +233,36 @@ file_open(struct file_info *file, int mode)
 	if ((mode & O_RDWR) == O_RDWR)
 	    file->mmap_mode |= PROT_WRITE;
     }
+
+    if (file->fd < 0 && errno == ENOENT) {
+	if (create_directory_for(file->filename) < 0)
+	    return -1;
+
+	return file_open(file, mode);
+    }
+
     return file->fd;
+}
+
+int
+create_directory_for(const char *filename)
+{
+    char *directory;
+
+    if (!(directory = strdup(dirname(filename))))
+	FAIL(-1, "strdup");
+
+    struct stat sb;
+    if (stat(directory, &sb) < 0) {
+	if (create_directory_for(directory) < 0)
+	    FAILX(-1, "create_directory_for");
+
+	if (mkdir(directory, 0777) < 0)
+	    FAIL(-1, "mkdir");
+    }
+
+    free(directory);
+    return 0;
 }
 
 static int
