@@ -26,6 +26,8 @@ static int		 unmap_current_block(struct file_info *file);
 static int		 receive_file_data(const int fd, const char *filename, const struct file_info *remote_info);
 static int		 create_directory_for(const char *filename);
 static int		 send_file_or_directory(const char *local_filename, const char *remote_filename);
+static char		*portable_basename(const char *path);
+static char		*portable_dirname(const char *path);
 
 extern int sock;
 
@@ -79,7 +81,11 @@ send_file_or_directory(const char *local_filename, const char *remote_filename)
 		if (local_filename[strlen(local_filename) - 1] == '/') {
 		    sprintf(combined_remote_filename, "%s", dp->d_name);
 		} else {
-		    sprintf(combined_remote_filename, "%s/%s", basename(local_filename), dp->d_name);
+		    char *local_basename = portable_basename(local_filename);
+		    if (!local_basename)
+			FAIL(-1, "portable_basename");
+		    sprintf(combined_remote_filename, "%s/%s", local_basename, dp->d_name);
+		    free(local_basename);
 		}
 	    } else {
 		sprintf(combined_remote_filename, "%s/%s", remote_filename, dp->d_name);
@@ -247,10 +253,10 @@ file_open(struct file_info *file, int mode)
 int
 create_directory_for(const char *filename)
 {
-    char *directory;
 
-    if (!(directory = strdup(dirname(filename))))
-	FAIL(-1, "strdup");
+    char *directory = portable_dirname(filename);
+    if (!directory)
+	FAIL(-1, "portable_dirname");
 
     struct stat sb;
     if (stat(directory, &sb) < 0) {
@@ -401,4 +407,48 @@ file_recv_content(const int fd, struct file_info *local, const struct file_info 
 	FAILX(-1, "recv_end_of_file");
 
     return 0;
+}
+
+/*
+ * dirname(3) and basename(3) have different prototypes and behave differently
+ * on FreeBSD and Linux.
+ *
+ * On FreeBSD:
+ *     char *dirname(const char *path);
+ *     char *basename(const char *path);
+ *
+ *     Both functions return a pointer to internal storage space overwritten on
+ *     subsequent calls.
+ *
+ * On Linux:
+ *     char *dirname(char *path);
+ *     char *basename(char *path);
+ *
+ *     Depending on defined macros, the path argument may or may not be
+ *     modified.  Hence, it is recommended to pass copies of strings.
+ *
+ * For those two functions, create a copy of the passed argument, pass it to
+ * the actual function, and return a copy of the result that must be freed.
+ */
+
+static char *
+portable_dirname(const char *path)
+{
+    char *rw_path = strdup(path);
+    if (!rw_path)
+	return NULL;
+    char *res = strdup(dirname(rw_path));
+    free(rw_path);
+    return res;
+}
+
+static char *
+portable_basename(const char *path)
+{
+    char *rw_path = strdup(path);
+    if (!rw_path)
+	return NULL;
+    char *res = strdup(basename(rw_path));
+    free(rw_path);
+    return res;
 }
