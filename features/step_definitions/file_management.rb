@@ -1,6 +1,6 @@
 require 'securerandom'
 
-Given(/^a random file "([^"]*)" exists and is (#{FILESIZE})$/) do |name, size|
+Given('a random file {string} exists and is {filesize}') do |name, size|
   filename = tmp_file_name(name)
 
   FileUtils.rm_rf(filename) if File.directory?(filename)
@@ -87,7 +87,7 @@ Then(/^the file "([^"]*)" should exist$/) do |name|
   expect(File.exist?(filename)).to be_truthy
 end
 
-Then(/^the file "([^"]*)" sould be (#{FILESIZE}) long$/) do |name, size|
+Then('the file {string} sould be {filesize} long') do |name, size|
   filename = tmp_file_name(name)
 
   expect(File.stat(filename).size).to eq(size.to_i)
@@ -114,19 +114,19 @@ Then(/^"([^"]*)" and "([^"]*)" should have the same content$/) do |source, desti
   expect(Digest::SHA256.hexdigest(File.read(destination_filename))).to eq(Digest::SHA256.hexdigest(File.read(source_filename)))
 end
 
-Then(/^the client should have sent (#{FILESIZE})$/) do |n|
+Then('the client should have sent {filesize}') do |n|
   expect(@client_stdout).to match(/sent #{n} bytes?/)
 end
 
-Then(/^the client should have received (#{FILESIZE})$/) do |n|
+Then('the client should have received {filesize}') do |n|
   expect(@client_stdout).to match(/received #{n} bytes?/)
 end
 
-Then(/^the server should have sent (#{FILESIZE})$/) do |n|
+Then('the server should have sent {filesize}') do |n|
   expect(@server_stdout).to match(/sent #{n} bytes?/)
 end
 
-Then(/^the server should have received (#{FILESIZE})$/) do |n|
+Then('the server should have received {filesize}') do |n|
   expect(@server_stdout).to match(/received #{n} bytes?/)
 end
 
